@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool per Staff Meeting</title>
+    
+<link rel="icon" href="favicon.ico">
+
+    <!-- Font e Icone -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Librerie JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* --- IMPOSTAZIONI GENERALI E COLORI --- */
+        :root {
+            --brand-blue: #00338D;
+            --brand-yellow: #FFD200;
+            --light-gray: #f0f1f3;
+            --medium-gray: #e1e3e6;
+            --dark-gray: #6c757d;
+            --text-color: #333;
+            --white: #ffffff;
+            --border-radius: 6px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Titillium Web', sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        /* --- LAYOUT PRINCIPALE E HEADER --- */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--brand-blue);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            border-bottom: 5px solid var(--brand-yellow);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        /* --- SEZIONI --- */
+        .section-card {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--brand-blue);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--medium-gray);
+        }
+
+        /* --- SEZIONE DATA --- */
+        #data-section label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        #meeting-date {
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-family: 'Titillium Web', sans-serif;
+            min-width: 200px;
+        }
+        
+        /* --- BOTTONI --- */
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            text-align: center;
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-primary {
+            background-color: var(--brand-blue);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background-color: #002266;
+        }
+
+        .btn-secondary {
+            background-color: var(--brand-yellow);
+            color: var(--brand-blue);
+        }
+        .btn-secondary:hover {
+            background-color: #e6bd00;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        #gestione-dati-section .controls-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        /* --- SEZIONE CONTENUTI E MODULI --- */
+        #add-module-btn {
+            margin-bottom: 20px;
+        }
+
+        .module {
+            background-color: #fafafa;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            position: relative;
+        }
+        
+        .module-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .module-control-btn {
+            background: var(--medium-gray);
+            color: var(--dark-gray);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .module-control-btn.drag-handle { cursor: grab; }
+        .module-control-btn.delete-module-btn { background-color: #fce1e4; color: #dc3545; }
+        .module-control-btn:hover { background-color: var(--dark-gray); color: var(--white); }
+        .module-control-btn.delete-module-btn:hover { background-color: #dc3545; color: var(--white); }
+
+        .module-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .flex-2 { flex: 2; }
+        .flex-1 { flex: 1; }
+
+        .field-container {
+            background: var(--white);
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .field-label {
+            font-weight: 600;
+            padding: 8px 12px;
+            background: var(--medium-gray);
+            border-bottom: 1px solid #ccc;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+            color: var(--brand-blue);
+        }
+
+        .editable-cell {
+            padding: 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            min-height: 100px;
+            outline: none;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+        }
+        
+        .editable-cell:focus {
+            box-shadow: 0 0 0 2px var(--brand-yellow);
+        }
+        
+        .column-desc {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 2;
+        }
+        .column-desc .field-container:first-child { flex-grow: 3; }
+        .column-desc .field-container:last-child { flex-grow: 1; }
+        .column-desc .field-container:last-child .editable-cell { min-height: 50px; }
+
+
+        .field-toolbar {
+            padding: 5px 12px;
+            background: var(--light-gray);
+            border-top: 1px solid #ccc;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .tool-icon {
+            cursor: pointer;
+            color: var(--dark-gray);
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+
+        .tool-icon:hover {
+            color: var(--brand-blue);
+        }
+        
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1200px) {
+            .module {
+                flex-wrap: wrap;
+            }
+            .module > .module-column {
+                min-width: 45%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8rem; }
+            .section-title { font-size: 1.5rem; }
+            
+            .module {
+                flex-direction: column;
+                padding-top: 50px;
+            }
+             .module > .module-column {
+                min-width: 100%;
+            }
+            #gestione-dati-section .controls-wrapper {
+                flex-direction: column;
+            }
+            .btn { width: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Tool per Staff Meeting</h1>
+        </header>
+
+        <main>
+            <!-- SEZIONE DATA -->
+            <section id="data-section" class="section-card">
+                <h2 class="section-title">Data</h2>
+                <label for="meeting-date">Data staff meeting</label>
+                <input type="date" id="meeting-date">
+            </section>
+
+            <!-- SEZIONE CONTENUTI -->
+            <section id="contenuti-section" class="section-card">
+                <h2 class="section-title">Contenuti</h2>
+                <button id="add-module-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Aggiungi Modulo</button>
+                <div id="modules-container">
+                    <!-- I moduli verranno inseriti qui da JS -->
+                </div>
+            </section>
+
+            <!-- SEZIONE GESTIONE DATI -->
+            <section id="gestione-dati-section" class="section-card">
+                <h2 class="section-title">Gestione Dati</h2>
+                <div class="controls-wrapper">
+                    <button id="save-btn" class="btn btn-primary"><i class="fas fa-save"></i> Salva nel Browser</button>
+                    <button id="export-btn" class="btn btn-secondary"><i class="fas fa-file-excel"></i> Esporta in Excel</button>
+                    <button id="import-btn" class="btn btn-secondary"><i class="fas fa-file-upload"></i> Importa da Excel</button>
+                    <input type="file" id="import-file" accept=".xlsx, .xls" style="display: none;">
+                    <button id="reset-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Resetta Tool</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- TEMPLATE PER I MODULI -->
+    <template id="module-template">
+        <div class="module">
+             <div class="module-controls">
+                <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
+                <button class="module-control-btn delete-module-btn" title="Elimina modulo"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Colonna Tema -->
+            <div class="module-column flex-2">
+                <div class="field-container">
+                    <div class="field-label">Tema</div>
+                    <div class="editable-cell" contenteditable="true" data-field="tema"></div>
+                    <div class="field-toolbar">
+                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Colonna Descrizioni -->
+            <div class="column-desc">
+                <div class="field-container">
+                    <div class="field-label">Descrizione estesa</div>
+                    <div class="editable-cell" contenteditable="true" data-field="desc-estesa"></div>
+                     <div class="field-toolbar">
+                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    </div>
+                </div>
+                <div class="field-container">
+                    <div class="field-label">Descrizione sintetica</div>
+                    <div class="editable-cell" contenteditable="true" data-field="desc-sintetica"></div>
+                     <div class="field-toolbar">
+                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonna Prossimi Passi -->
+            <div class="module-column flex-1">
+                 <div class="field-container">
+                    <div class="field-label">Prossimi passi</div>
+                    <div class="editable-cell" contenteditable="true" data-field="prossimi-passi"></div>
+                     <div class="field-toolbar">
+                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonna Strutture -->
+            <div class="module-column flex-1">
+                <div class="field-container">
+                    <div class="field-label">Strutture</div>
+                    <div class="editable-cell" contenteditable="true" data-field="strutture"></div>
+                     <div class="field-toolbar">
+                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Elementi del DOM
+        const addModuleBtn = document.getElementById('add-module-btn');
+        const modulesContainer = document.getElementById('modules-container');
+        const moduleTemplate = document.getElementById('module-template');
+        const meetingDateInput = document.getElementById('meeting-date');
+        
+        const saveBtn = document.getElementById('save-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const importBtn = document.getElementById('import-btn');
+        const importFileInput = document.getElementById('import-file');
+        const resetBtn = document.getElementById('reset-btn');
+
+        new Sortable(modulesContainer, {
+            animation: 150,
+            handle: '.drag-handle',
+        });
+
+        const createModule = (data = {}) => {
+            const moduleClone = moduleTemplate.content.cloneNode(true);
+            const moduleElement = moduleClone.querySelector('.module');
+            moduleElement.dataset.id = data.id || `module-${Date.now()}`;
+            
+            const fields = moduleElement.querySelectorAll('.editable-cell');
+            fields.forEach(field => {
+                const fieldName = field.dataset.field;
+                if (data[fieldName]) {
+                    field.innerHTML = data[fieldName];
+                }
+            });
+            
+            modulesContainer.appendChild(moduleClone);
+        };
+        
+        modulesContainer.addEventListener('paste', (e) => {
+            if (e.target.classList.contains('editable-cell')) {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                document.execCommand('insertText', false, text);
+            }
+        });
+
+        modulesContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-module-btn')) {
+                e.target.closest('.module').remove();
+                return;
+            }
+
+            const toolIcon = e.target.closest('.tool-icon');
+            if (toolIcon) {
+                const action = toolIcon.dataset.action;
+                const editableCell = toolIcon.closest('.field-container').querySelector('.editable-cell');
+                editableCell.focus();
+
+                const transformSelection = (transformFn) => {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        const selectedText = range.toString();
+                        if (selectedText) {
+                            const transformedText = transformFn(selectedText);
+                            range.deleteContents();
+                            range.insertNode(document.createTextNode(transformedText));
+                        }
+                    }
+                };
+
+                switch (action) {
+                    case 'copy':
+                        // **MODIFICATO**: Copia solo testo semplice
+                        navigator.clipboard.writeText(editableCell.innerText).then(() => {
+                           toolIcon.classList.add('fa-check');
+                           setTimeout(() => {
+                               toolIcon.classList.remove('fa-check');
+                               toolIcon.classList.add('fa-copy');
+                           }, 1500);
+                           toolIcon.classList.remove('fa-copy');
+                        });
+                        break;
+                    case 'uppercase':
+                        transformSelection(text => text.toUpperCase());
+                        break;
+                    case 'lowercase':
+                        transformSelection(text => text.toLowerCase());
+                        break;
+                    case 'capitalize':
+                        transformSelection(text => text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()));
+                        break;
+                }
+            }
+        });
+
+        const showButtonFeedback = (button, message, duration = 1500) => {
+            const originalText = button.innerHTML;
+            button.innerHTML = message;
+            button.disabled = true;
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, duration);
+        };
+
+        // --- GESTIONE DATI ---
+
+        saveBtn.addEventListener('click', () => {
+            const modulesData = [];
+            modulesContainer.querySelectorAll('.module').forEach(module => {
+                // **MODIFICATO**: Semplificato, non salva più i dati del colore
+                const moduleData = { id: module.dataset.id };
+                module.querySelectorAll('.editable-cell').forEach(cell => {
+                    const fieldName = cell.dataset.field;
+                    moduleData[fieldName] = cell.innerHTML;
+                });
+                modulesData.push(moduleData);
+            });
+            
+            const dataToSave = {
+                date: meetingDateInput.value,
+                modules: modulesData
+            };
+
+            localStorage.setItem('staffMeetingData', JSON.stringify(dataToSave));
+            showButtonFeedback(saveBtn, 'Salvato! <i class="fas fa-check"></i>');
+        });
+
+        const loadData = () => {
+            const savedData = localStorage.getItem('staffMeetingData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                meetingDateInput.value = data.date || '';
+                modulesContainer.innerHTML = '';
+                if (data.modules) {
+                    data.modules.forEach(moduleData => createModule(moduleData));
+                }
+            }
+        };
+
+        exportBtn.addEventListener('click', () => {
+            showButtonFeedback(exportBtn, 'Esporto... <i class="fas fa-spinner fa-spin"></i>', 3000);
+            const dataForExport = [];
+            modulesContainer.querySelectorAll('.module').forEach(module => {
+                const row = {};
+                module.querySelectorAll('.editable-cell').forEach(cell => {
+                    row[cell.closest('.field-container').querySelector('.field-label').innerText] = cell.innerText;
+                });
+                dataForExport.push(row);
+            });
+
+            if (dataForExport.length === 0) {
+                showButtonFeedback(exportBtn, 'Nessun dato <i class="fas fa-times"></i>');
+                return;
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(dataForExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Meeting');
+            const fileName = `Staff_Meeting_${meetingDateInput.value || new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        });
+
+        importBtn.addEventListener('click', () => importFileInput.click());
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showButtonFeedback(importBtn, 'Carico... <i class="fas fa-spinner fa-spin"></i>', 3000);
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (json.length > 0) {
+                        if (confirm("L'importazione cancellerà i dati attuali. Continuare?")) {
+                            modulesContainer.innerHTML = '';
+                            json.forEach(row => {
+                                const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
+
+                                const moduleData = {
+                                    'tema': processText(row['Tema']),
+                                    'desc-estesa': processText(row['Descrizione estesa']),
+                                    'desc-sintetica': processText(row['Descrizione sintetica']),
+                                    'prossimi-passi': processText(row['Prossimi passi']),
+                                    'strutture': processText(row['Strutture'])
+                                };
+                                createModule(moduleData);
+                            });
+                        }
+                    } else {
+                        alert("Il file Excel sembra essere vuoto o non valido.");
+                    }
+                } catch (error) {
+                    console.error("Errore durante l'importazione:", error);
+                    alert("Si è verificato un errore durante la lettura del file. Assicurati che sia un file Excel valido.");
+                } finally {
+                    importFileInput.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (confirm("Sei sicuro di voler resettare tutti i dati? L'operazione non è reversibile.")) {
+                localStorage.removeItem('staffMeetingData');
+                meetingDateInput.value = '';
+                modulesContainer.innerHTML = '';
+                showButtonFeedback(resetBtn, 'Resettato <i class="fas fa-check"></i>');
+            }
+        });
+
+        addModuleBtn.addEventListener('click', () => createModule());
+        loadData();
+    });
+    </script>
+</body>
+</html>
