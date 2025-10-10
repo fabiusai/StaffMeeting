@@ -674,38 +674,35 @@
                 return;
             }
 
-            // --- LOGICA DI COPIA CON FORMATTAZIONE AGGIORNATA ---
+            // --- LOGICA DI COPIA ---
             if (e.target.closest('.btn-copy-ppt')) {
+                const button = e.target.closest('.btn-copy-ppt');
+                const fieldsToCopy = ['tema', 'desc-estesa', 'prossimi-passi', 'strutture'];
                 
                 const getStyledHtmlForField = (fieldName, text) => {
                     const commonStyle = "font-family: Arial, sans-serif; font-size: 11pt; margin: 0; padding: 0;";
                     const blackColor = "color: #000000;";
                     const themeColor = "color: #2a4979;"; 
                     const cleanedText = text.trim();
+                    
+                    const escapeHtml = (unsafe) => unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
                     switch(fieldName) {
                         case 'tema':
-                            return `<p style="${commonStyle} ${themeColor} font-weight: bold;">${cleanedText.replace(/\n/g, '<br>')}</p>`;
+                            return `<p style="${commonStyle} ${themeColor} font-weight: bold;">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
                         
                         case 'desc-estesa':
-                            if (!cleanedText) return `<p></p>`;
-                            const listItems = cleanedText.split('\n')
-                                .filter(line => line.trim() !== '')
-                                // FIX: This structure creates a hanging indent compatible with PowerPoint
-                                .map(line => `<p style="${commonStyle} ${blackColor} padding-left: 25px; text-indent: -1.0em; margin-bottom: 5px;">&bull; &nbsp; ${line.trim()}</p>`)
-                                .join('');
-                            return `<div>${listItems}</div>`;
+                             if (!cleanedText) return `<p></p>`;
+                            return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
 
                         case 'prossimi-passi':
                         case 'strutture':
-                            return `<p style="${commonStyle} ${blackColor}">${cleanedText.replace(/\n/g, '<br>')}</p>`;
+                            return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
                         
                         default:
-                            return cleanedText.replace(/\n/g, '<br>');
+                            return escapeHtml(cleanedText).replace(/\n/g, '<br>');
                     }
                 };
-
-                const fieldsToCopy = ['tema', 'desc-estesa', 'prossimi-passi', 'strutture'];
 
                 const htmlCells = fieldsToCopy.map(fieldName => {
                     const field = moduleElement.querySelector(`.editable-cell[data-field="${fieldName}"]`);
@@ -721,8 +718,6 @@
                     return field ? field.innerText : '';
                 }).join('\t');
                 
-                const button = e.target.closest('.btn-copy-ppt');
-
                 try {
                     const blobHtml = new Blob([htmlString], { type: 'text/html' });
                     const blobText = new Blob([textPlain], { type: 'text/plain' });
@@ -731,12 +726,7 @@
                     await navigator.clipboard.write(data);
                     showButtonFeedback(button, 'Copiato! <i class="fas fa-check"></i>');
                 } catch(err) {
-                     try {
-                        await navigator.clipboard.writeText(textPlain);
-                        showButtonFeedback(button, 'Copiato! <i class="fas fa-check"></i>');
-                    } catch (e) {
-                         showButtonFeedback(button, 'Errore', false);
-                    }
+                    showButtonFeedback(button, 'Errore', false);
                 }
                 return;
             }
