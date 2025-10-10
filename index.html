@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tool per Staff Meeting</title>
     
-<link rel="icon" href="favicon.ico">
+    <link rel="icon" href="favicon.ico">
 
     <!-- Font e Icone -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,6 +28,7 @@
             --text-color: #333;
             --white: #ffffff;
             --border-radius: 6px;
+            --success-green: #28a745;
         }
 
         * {
@@ -84,27 +85,11 @@
             margin-bottom: 20px;
             border-bottom: 2px solid var(--medium-gray);
         }
-
-        /* --- SEZIONE DATA --- */
-        #data-section label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-right: 15px;
-        }
-
-        #meeting-date {
-            padding: 10px;
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-family: 'Titillium Web', sans-serif;
-            min-width: 200px;
-        }
         
         /* --- BOTTONI --- */
         .btn {
-            padding: 12px 25px;
-            font-size: 1rem;
+            padding: 10px 20px;
+            font-size: 0.9rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -113,6 +98,9 @@
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease;
             text-align: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .btn:active {
@@ -143,34 +131,132 @@
             background-color: #c82333;
         }
         
-        #gestione-dati-section .controls-wrapper {
+        .controls-wrapper {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
         }
 
-        /* --- SEZIONE CONTENUTI E MODULI --- */
-        #add-module-btn {
-            margin-bottom: 20px;
+        /* --- SEZIONE FILTRI --- */
+        #filtri-section .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-family: 'Titillium Web', sans-serif;
+        }
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 20px;
         }
 
+        /* --- SEZIONE CONTENUTI E MODULI --- */
         .module {
             background-color: #fafafa;
             border: 1px solid var(--medium-gray);
+            border-left: 5px solid transparent;
             border-radius: var(--border-radius);
-            padding: 15px;
             margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
+            padding: 15px;
             position: relative;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .module.flagged {
+            border-left-color: var(--brand-yellow);
+            background-color: #fffbef;
+        }
+
+        .module.hidden {
+            display: none;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--medium-gray);
+            flex-wrap: wrap;
+            gap: 10px;
+            transition: margin 0.4s ease-in-out, padding 0.4s ease-in-out, border-color 0.4s ease-in-out;
+        }
+
+        .module.collapsed .module-header {
+            border-bottom-color: transparent;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
         
-        .module-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
+        .module-title-wrapper {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .module-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            padding: 5px;
+            margin: -5px;
+            border-radius: var(--border-radius);
+            outline: none;
+            width: 100%;
+        }
+
+        .module-title:focus {
+            background-color: var(--white);
+            box-shadow: 0 0 0 2px var(--brand-yellow);
+            cursor: text;
+        }
+
+        .module-meta {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            padding-top: 5px;
+        }
+
+        .module-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
+        }
+
+        /* --- FIX APRI/CHIUDI RECORD --- */
+        .module-content-wrapper {
+            display: grid;
+            grid-template-rows: 1fr;
+            transition: grid-template-rows 0.4s ease-in-out;
+        }
+        
+        .module.collapsed .module-content-wrapper {
+            grid-template-rows: 0fr;
+        }
+
+        .module-content {
+            overflow: hidden;
+            min-height: 0;
+            display: flex;
+            gap: 15px;
+            padding-top: 5px;
         }
         
         .module-control-btn {
@@ -181,17 +267,44 @@
             height: 30px;
             border-radius: 50%;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, color 0.2s, transform 0.3s;
             font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         
         .module-control-btn.drag-handle { cursor: grab; }
         .module-control-btn.delete-module-btn { background-color: #fce1e4; color: #dc3545; }
         .module-control-btn:hover { background-color: var(--dark-gray); color: var(--white); }
         .module-control-btn.delete-module-btn:hover { background-color: #dc3545; color: var(--white); }
+
+        .module-control-btn.flag-btn.flagged {
+            background-color: var(--brand-yellow);
+            color: var(--brand-blue);
+        }
+
+        .module.collapsed .toggle-collapse-btn {
+            transform: rotate(-180deg);
+        }
+        
+        /* Vista solo Titoli */
+        #modules-container.titles-only-view .module-content-wrapper {
+            display: none;
+        }
+        #modules-container.titles-only-view .module-header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+         #modules-container.titles-only-view .module {
+            padding: 10px 15px;
+        }
+        #modules-container.titles-only-view .module-title {
+            font-size: 1.1rem;
+        }
+
 
         .module-column {
             display: flex;
@@ -246,7 +359,6 @@
         .column-desc .field-container:last-child { flex-grow: 1; }
         .column-desc .field-container:last-child .editable-cell { min-height: 50px; }
 
-
         .field-toolbar {
             padding: 5px 12px;
             background: var(--light-gray);
@@ -269,10 +381,10 @@
         
         /* --- RESPONSIVE --- */
         @media (max-width: 1200px) {
-            .module {
+            .module-content {
                 flex-wrap: wrap;
             }
-            .module > .module-column {
+            .module-content > .module-column {
                 min-width: 45%;
             }
         }
@@ -281,19 +393,17 @@
             header h1 { font-size: 1.8rem; }
             .section-title { font-size: 1.5rem; }
             
-            .module {
+            .module-content {
                 flex-direction: column;
-                padding-top: 50px;
             }
-             .module > .module-column {
+             .module-content > .module-column {
                 min-width: 100%;
             }
-            #gestione-dati-section .controls-wrapper {
+            .controls-wrapper, .filter-buttons {
                 flex-direction: column;
             }
             .btn { width: 100%; }
         }
-
     </style>
 </head>
 <body>
@@ -304,17 +414,42 @@
         </header>
 
         <main>
-            <!-- SEZIONE DATA -->
-            <section id="data-section" class="section-card">
-                <h2 class="section-title">Data</h2>
-                <label for="meeting-date">Data staff meeting</label>
-                <input type="date" id="meeting-date">
+            <!-- SEZIONE FILTRI -->
+            <section id="filtri-section" class="section-card">
+                <h2 class="section-title">Filtri e Vista</h2>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filter-flagged">Stato</label>
+                        <select id="filter-flagged">
+                            <option value="not-flagged">Solo non flaggati</option>
+                            <option value="all">Tutti</option>
+                            <option value="flagged">Solo flaggati</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date-from">Data Da</label>
+                        <input type="date" id="filter-date-from">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date-to">Data A</label>
+                        <input type="date" id="filter-date-to">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-text">Ricerca Testo (es: Poste AND Italiane)</label>
+                        <input type="text" id="filter-text" placeholder="Usa AND, OR, NOT...">
+                    </div>
+                </div>
+                <div class="filter-buttons">
+                    <button id="apply-filters-btn" class="btn btn-primary"><i class="fas fa-filter"></i> Applica Filtri</button>
+                    <button id="reset-filters-btn" class="btn btn-secondary"><i class="fas fa-undo"></i> Resetta Filtri</button>
+                    <button id="toggle-view-btn" class="btn btn-secondary"><i class="fas fa-list"></i> Vista Titoli</button>
+                </div>
             </section>
 
             <!-- SEZIONE CONTENUTI -->
             <section id="contenuti-section" class="section-card">
                 <h2 class="section-title">Contenuti</h2>
-                <button id="add-module-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Aggiungi Modulo</button>
+                <button id="add-module-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Aggiungi Record</button>
                 <div id="modules-container">
                     <!-- I moduli verranno inseriti qui da JS -->
                 </div>
@@ -337,73 +472,74 @@
     <!-- TEMPLATE PER I MODULI -->
     <template id="module-template">
         <div class="module">
-             <div class="module-controls">
-                <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
-                <button class="module-control-btn delete-module-btn" title="Elimina modulo"><i class="fas fa-times"></i></button>
-            </div>
-
-            <!-- Colonna Tema -->
-            <div class="module-column flex-2">
-                <div class="field-container">
-                    <div class="field-label">Tema</div>
-                    <div class="editable-cell" contenteditable="true" data-field="tema"></div>
-                    <div class="field-toolbar">
-                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <h3 class="module-title editable-cell" contenteditable="true" data-field="tema" placeholder="Inserisci il tema qui..."></h3>
+                    <div class="module-meta">
+                        Aggiornato il: <span class="module-timestamp"></span>
                     </div>
+                </div>
+                <div class="module-actions">
+                    <button class="module-control-btn toggle-collapse-btn" title="Apri/Chiudi Dettagli"><i class="fas fa-chevron-up"></i></button>
+                    <button class="btn btn-secondary btn-copy-ppt"><i class="fas fa-clipboard"></i> Copia per PPT</button>
+                    <button class="module-control-btn flag-btn" title="Segna come utilizzato"><i class="far fa-flag"></i></button>
+                    <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
+                    <button class="module-control-btn delete-module-btn" title="Elimina record"><i class="fas fa-times"></i></button>
                 </div>
             </div>
             
-            <!-- Colonna Descrizioni -->
-            <div class="column-desc">
-                <div class="field-container">
-                    <div class="field-label">Descrizione estesa</div>
-                    <div class="editable-cell" contenteditable="true" data-field="desc-estesa"></div>
-                     <div class="field-toolbar">
-                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+            <div class="module-content-wrapper">
+                <div class="module-content">
+                    <!-- Colonna Descrizioni -->
+                    <div class="column-desc">
+                        <div class="field-container">
+                            <div class="field-label">Descrizione estesa</div>
+                            <div class="editable-cell" contenteditable="true" data-field="desc-estesa"></div>
+                             <div class="field-toolbar">
+                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                                <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                            </div>
+                        </div>
+                        <div class="field-container">
+                            <div class="field-label">Descrizione sintetica</div>
+                            <div class="editable-cell" contenteditable="true" data-field="desc-sintetica"></div>
+                             <div class="field-toolbar">
+                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="field-container">
-                    <div class="field-label">Descrizione sintetica</div>
-                    <div class="editable-cell" contenteditable="true" data-field="desc-sintetica"></div>
-                     <div class="field-toolbar">
-                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Colonna Prossimi Passi -->
-            <div class="module-column flex-1">
-                 <div class="field-container">
-                    <div class="field-label">Prossimi passi</div>
-                    <div class="editable-cell" contenteditable="true" data-field="prossimi-passi"></div>
-                     <div class="field-toolbar">
-                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    <!-- Colonna Prossimi Passi -->
+                    <div class="module-column flex-1">
+                         <div class="field-container">
+                            <div class="field-label">Prossimi passi</div>
+                            <div class="editable-cell" contenteditable="true" data-field="prossimi-passi"></div>
+                             <div class="field-toolbar">
+                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Colonna Strutture -->
-            <div class="module-column flex-1">
-                <div class="field-container">
-                    <div class="field-label">Strutture</div>
-                    <div class="editable-cell" contenteditable="true" data-field="strutture"></div>
-                     <div class="field-toolbar">
-                        <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                        <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                        <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                        <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                    <!-- Colonna Strutture -->
+                    <div class="module-column flex-1">
+                        <div class="field-container">
+                            <div class="field-label">Strutture</div>
+                            <div class="editable-cell" contenteditable="true" data-field="strutture"></div>
+                             <div class="field-toolbar">
+                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
+                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
+                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
+                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -412,27 +548,45 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Elementi del DOM
-        const addModuleBtn = document.getElementById('add-module-btn');
+        // --- ELEMENTI DEL DOM ---
         const modulesContainer = document.getElementById('modules-container');
         const moduleTemplate = document.getElementById('module-template');
-        const meetingDateInput = document.getElementById('meeting-date');
         
+        // Bottoni Contenuti
+        const addModuleBtn = document.getElementById('add-module-btn');
+        
+        // Bottoni Gestione Dati
         const saveBtn = document.getElementById('save-btn');
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
         const importFileInput = document.getElementById('import-file');
         const resetBtn = document.getElementById('reset-btn');
 
+        // Controlli Filtri
+        const filterFlagged = document.getElementById('filter-flagged');
+        const filterDateFrom = document.getElementById('filter-date-from');
+        const filterDateTo = document.getElementById('filter-date-to');
+        const filterText = document.getElementById('filter-text');
+        const applyFiltersBtn = document.getElementById('apply-filters-btn');
+        const resetFiltersBtn = document.getElementById('reset-filters-btn');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+
+
+        // --- INIZIALIZZAZIONE ---
         new Sortable(modulesContainer, {
             animation: 150,
             handle: '.drag-handle',
         });
 
+        // --- FUNZIONI PRINCIPALI ---
+
         const createModule = (data = {}) => {
             const moduleClone = moduleTemplate.content.cloneNode(true);
             const moduleElement = moduleClone.querySelector('.module');
+            
             moduleElement.dataset.id = data.id || `module-${Date.now()}`;
+            moduleElement.dataset.timestamp = data.timestamp || new Date().toISOString();
+            moduleElement.dataset.flagged = data.flagged || 'false';
             
             const fields = moduleElement.querySelectorAll('.editable-cell');
             fields.forEach(field => {
@@ -441,10 +595,49 @@
                     field.innerHTML = data[fieldName];
                 }
             });
-            
+
+            updateModuleVisuals(moduleElement);
             modulesContainer.appendChild(moduleClone);
         };
-        
+
+        const updateModuleVisuals = (moduleElement) => {
+            const timestampEl = moduleElement.querySelector('.module-timestamp');
+            const date = new Date(moduleElement.dataset.timestamp);
+            timestampEl.textContent = date.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            const isFlagged = moduleElement.dataset.flagged === 'true';
+            moduleElement.classList.toggle('flagged', isFlagged);
+            const flagBtn = moduleElement.querySelector('.flag-btn');
+            const flagIcon = flagBtn.querySelector('i');
+            flagBtn.classList.toggle('flagged', isFlagged);
+            flagIcon.className = isFlagged ? 'fas fa-flag' : 'far fa-flag';
+            flagBtn.title = isFlagged ? 'Rimuovi flag' : 'Segna come utilizzato';
+        };
+
+        const updateTimestamp = (moduleElement) => {
+             moduleElement.dataset.timestamp = new Date().toISOString();
+             updateModuleVisuals(moduleElement);
+        }
+
+        const showButtonFeedback = (button, message, isSuccess = true, duration = 1500) => {
+            const originalContent = button.innerHTML;
+            button.innerHTML = message;
+            button.disabled = true;
+            
+            const originalBg = button.style.backgroundColor;
+            if(isSuccess) {
+                button.style.backgroundColor = 'var(--success-green)';
+            }
+
+            setTimeout(() => {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+                button.style.backgroundColor = originalBg;
+            }, duration);
+        };
+
+        // --- GESTIONE EVENTI ---
+
         modulesContainer.addEventListener('paste', (e) => {
             if (e.target.classList.contains('editable-cell')) {
                 e.preventDefault();
@@ -453,9 +646,98 @@
             }
         });
 
-        modulesContainer.addEventListener('click', (e) => {
+        modulesContainer.addEventListener('click', async (e) => {
+            const moduleElement = e.target.closest('.module');
+            if (!moduleElement) return;
+
+            const titleWrapper = e.target.closest('.module-title-wrapper');
+            const collapseButton = e.target.closest('.toggle-collapse-btn');
+            const titleElement = moduleElement.querySelector('.module-title');
+
+            if (collapseButton || (titleWrapper && document.activeElement !== titleElement)) {
+                moduleElement.classList.toggle('collapsed');
+            }
+
             if (e.target.closest('.delete-module-btn')) {
-                e.target.closest('.module').remove();
+                if(confirm('Sei sicuro di voler eliminare questo record?')) {
+                    moduleElement.remove();
+                }
+                return;
+            }
+
+            if (e.target.closest('.flag-btn')) {
+                moduleElement.dataset.flagged = moduleElement.dataset.flagged === 'true' ? 'false' : 'true';
+                updateTimestamp(moduleElement);
+                if (filterFlagged.value !== 'all') {
+                    applyFilters();
+                }
+                return;
+            }
+
+            // --- LOGICA DI COPIA CON FORMATTAZIONE AGGIORNATA ---
+            if (e.target.closest('.btn-copy-ppt')) {
+                
+                const getStyledHtmlForField = (fieldName, text) => {
+                    const commonStyle = "font-family: Arial, sans-serif; font-size: 11pt; margin: 0; padding: 0;";
+                    const blackColor = "color: #000000;";
+                    const themeColor = "color: #2a4979;"; 
+                    const cleanedText = text.trim();
+
+                    switch(fieldName) {
+                        case 'tema':
+                            return `<p style="${commonStyle} ${themeColor} font-weight: bold;">${cleanedText.replace(/\n/g, '<br>')}</p>`;
+                        
+                        case 'desc-estesa':
+                            if (!cleanedText) return `<p></p>`;
+                            const listItems = cleanedText.split('\n')
+                                .filter(line => line.trim() !== '')
+                                // FIX: This structure creates a hanging indent compatible with PowerPoint
+                                .map(line => `<p style="${commonStyle} ${blackColor} padding-left: 25px; text-indent: -1.0em; margin-bottom: 5px;">&bull; &nbsp; ${line.trim()}</p>`)
+                                .join('');
+                            return `<div>${listItems}</div>`;
+
+                        case 'prossimi-passi':
+                        case 'strutture':
+                            return `<p style="${commonStyle} ${blackColor}">${cleanedText.replace(/\n/g, '<br>')}</p>`;
+                        
+                        default:
+                            return cleanedText.replace(/\n/g, '<br>');
+                    }
+                };
+
+                const fieldsToCopy = ['tema', 'desc-estesa', 'prossimi-passi', 'strutture'];
+
+                const htmlCells = fieldsToCopy.map(fieldName => {
+                    const field = moduleElement.querySelector(`.editable-cell[data-field="${fieldName}"]`);
+                    const text = field ? field.innerText : '';
+                    const styledHtml = getStyledHtmlForField(fieldName, text);
+                    return `<td style="vertical-align: top;">${styledHtml}</td>`;
+                }).join('');
+
+                const htmlString = `<table><tbody><tr>${htmlCells}</tr></tbody></table>`;
+
+                const textPlain = fieldsToCopy.map(fieldName => {
+                    const field = moduleElement.querySelector(`.editable-cell[data-field="${fieldName}"]`);
+                    return field ? field.innerText : '';
+                }).join('\t');
+                
+                const button = e.target.closest('.btn-copy-ppt');
+
+                try {
+                    const blobHtml = new Blob([htmlString], { type: 'text/html' });
+                    const blobText = new Blob([textPlain], { type: 'text/plain' });
+                    const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+                    
+                    await navigator.clipboard.write(data);
+                    showButtonFeedback(button, 'Copiato! <i class="fas fa-check"></i>');
+                } catch(err) {
+                     try {
+                        await navigator.clipboard.writeText(textPlain);
+                        showButtonFeedback(button, 'Copiato! <i class="fas fa-check"></i>');
+                    } catch (e) {
+                         showButtonFeedback(button, 'Errore', false);
+                    }
+                }
                 return;
             }
 
@@ -471,55 +753,43 @@
                         const range = selection.getRangeAt(0);
                         const selectedText = range.toString();
                         if (selectedText) {
-                            const transformedText = transformFn(selectedText);
                             range.deleteContents();
-                            range.insertNode(document.createTextNode(transformedText));
+                            range.insertNode(document.createTextNode(transformFn(selectedText)));
                         }
                     }
                 };
 
                 switch (action) {
                     case 'copy':
-                        // **MODIFICATO**: Copia solo testo semplice
                         navigator.clipboard.writeText(editableCell.innerText).then(() => {
-                           toolIcon.classList.add('fa-check');
-                           setTimeout(() => {
-                               toolIcon.classList.remove('fa-check');
-                               toolIcon.classList.add('fa-copy');
-                           }, 1500);
-                           toolIcon.classList.remove('fa-copy');
+                           toolIcon.classList.replace('fa-copy', 'fa-check');
+                           setTimeout(() => toolIcon.classList.replace('fa-check', 'fa-copy'), 1500);
                         });
                         break;
-                    case 'uppercase':
-                        transformSelection(text => text.toUpperCase());
-                        break;
-                    case 'lowercase':
-                        transformSelection(text => text.toLowerCase());
-                        break;
-                    case 'capitalize':
-                        transformSelection(text => text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()));
-                        break;
+                    case 'uppercase': transformSelection(text => text.toUpperCase()); break;
+                    case 'lowercase': transformSelection(text => text.toLowerCase()); break;
+                    case 'capitalize': transformSelection(text => text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase())); break;
                 }
             }
         });
+        
+        modulesContainer.addEventListener('input', e => {
+            if(e.target.classList.contains('editable-cell')){
+                const moduleElement = e.target.closest('.module');
+                if(moduleElement) updateTimestamp(moduleElement);
+            }
+        });
 
-        const showButtonFeedback = (button, message, duration = 1500) => {
-            const originalText = button.innerHTML;
-            button.innerHTML = message;
-            button.disabled = true;
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.disabled = false;
-            }, duration);
-        };
-
-        // --- GESTIONE DATI ---
+        // --- GESTIONE DATI (SALVATAGGIO, CARICAMENTO, ETC) ---
 
         saveBtn.addEventListener('click', () => {
             const modulesData = [];
             modulesContainer.querySelectorAll('.module').forEach(module => {
-                // **MODIFICATO**: Semplificato, non salva più i dati del colore
-                const moduleData = { id: module.dataset.id };
+                const moduleData = {
+                    id: module.dataset.id,
+                    timestamp: module.dataset.timestamp,
+                    flagged: module.dataset.flagged === 'true',
+                };
                 module.querySelectorAll('.editable-cell').forEach(cell => {
                     const fieldName = cell.dataset.field;
                     moduleData[fieldName] = cell.innerHTML;
@@ -527,20 +797,15 @@
                 modulesData.push(moduleData);
             });
             
-            const dataToSave = {
-                date: meetingDateInput.value,
-                modules: modulesData
-            };
-
-            localStorage.setItem('staffMeetingData', JSON.stringify(dataToSave));
+            const dataToSave = { modules: modulesData };
+            localStorage.setItem('staffMeetingDataV2', JSON.stringify(dataToSave));
             showButtonFeedback(saveBtn, 'Salvato! <i class="fas fa-check"></i>');
         });
 
         const loadData = () => {
-            const savedData = localStorage.getItem('staffMeetingData');
+            const savedData = localStorage.getItem('staffMeetingDataV2');
             if (savedData) {
                 const data = JSON.parse(savedData);
-                meetingDateInput.value = data.date || '';
                 modulesContainer.innerHTML = '';
                 if (data.modules) {
                     data.modules.forEach(moduleData => createModule(moduleData));
@@ -549,25 +814,32 @@
         };
 
         exportBtn.addEventListener('click', () => {
-            showButtonFeedback(exportBtn, 'Esporto... <i class="fas fa-spinner fa-spin"></i>', 3000);
+            showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
             const dataForExport = [];
             modulesContainer.querySelectorAll('.module').forEach(module => {
+                if (module.classList.contains('hidden')) return;
+
                 const row = {};
+                row['Flagged'] = module.dataset.flagged === 'true' ? 'Sì' : 'No';
+                row['Last Update'] = new Date(module.dataset.timestamp).toLocaleString('it-IT');
                 module.querySelectorAll('.editable-cell').forEach(cell => {
-                    row[cell.closest('.field-container').querySelector('.field-label').innerText] = cell.innerText;
+                    const label = cell.dataset.field === 'tema' 
+                        ? 'Tema' 
+                        : cell.closest('.field-container').querySelector('.field-label').innerText;
+                    row[label] = cell.innerText;
                 });
                 dataForExport.push(row);
             });
 
             if (dataForExport.length === 0) {
-                showButtonFeedback(exportBtn, 'Nessun dato <i class="fas fa-times"></i>');
+                showButtonFeedback(exportBtn, 'Nessun dato', false);
                 return;
             }
 
             const worksheet = XLSX.utils.json_to_sheet(dataForExport);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Meeting');
-            const fileName = `Staff_Meeting_${meetingDateInput.value || new Date().toISOString().slice(0,10)}.xlsx`;
+            const fileName = `Staff_Meeting_Export_${new Date().toISOString().slice(0,10)}.xlsx`;
             XLSX.writeFile(workbook, fileName);
         });
 
@@ -576,7 +848,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            showButtonFeedback(importBtn, 'Carico... <i class="fas fa-spinner fa-spin"></i>', 3000);
+            showButtonFeedback(importBtn, 'Carico...', true, 3000);
 
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -588,27 +860,24 @@
                     const json = XLSX.utils.sheet_to_json(worksheet);
                     
                     if (json.length > 0) {
-                        if (confirm("L'importazione cancellerà i dati attuali. Continuare?")) {
-                            modulesContainer.innerHTML = '';
+                        if (confirm("L'importazione aggiungerà i nuovi record a quelli esistenti. Continuare?")) {
                             json.forEach(row => {
                                 const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
-
                                 const moduleData = {
                                     'tema': processText(row['Tema']),
                                     'desc-estesa': processText(row['Descrizione estesa']),
                                     'desc-sintetica': processText(row['Descrizione sintetica']),
                                     'prossimi-passi': processText(row['Prossimi passi']),
-                                    'strutture': processText(row['Strutture'])
+                                    'strutture': processText(row['Strutture']),
+                                    'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì'
                                 };
                                 createModule(moduleData);
                             });
                         }
-                    } else {
-                        alert("Il file Excel sembra essere vuoto o non valido.");
-                    }
+                    } else { alert("Il file Excel sembra essere vuoto o non valido."); }
                 } catch (error) {
-                    console.error("Errore durante l'importazione:", error);
-                    alert("Si è verificato un errore durante la lettura del file. Assicurati che sia un file Excel valido.");
+                    console.error("Errore importazione:", error);
+                    alert("Errore durante la lettura del file. Assicurati che sia un file Excel valido.");
                 } finally {
                     importFileInput.value = '';
                 }
@@ -618,16 +887,83 @@
         
         resetBtn.addEventListener('click', () => {
             if (confirm("Sei sicuro di voler resettare tutti i dati? L'operazione non è reversibile.")) {
-                localStorage.removeItem('staffMeetingData');
-                meetingDateInput.value = '';
+                localStorage.removeItem('staffMeetingDataV2');
                 modulesContainer.innerHTML = '';
                 showButtonFeedback(resetBtn, 'Resettato <i class="fas fa-check"></i>');
             }
         });
 
         addModuleBtn.addEventListener('click', () => createModule());
+
+        // --- LOGICA FILTRI E VISTA ---
+        
+        const applyFilters = () => {
+            const modules = modulesContainer.querySelectorAll('.module');
+            const flagValue = filterFlagged.value;
+            const dateFrom = filterDateFrom.value ? new Date(filterDateFrom.value).setHours(0,0,0,0) : null;
+            const dateTo = filterDateTo.value ? new Date(filterDateTo.value).setHours(23,59,59,999) : null;
+            const searchText = filterText.value.trim().toLowerCase();
+            
+            modules.forEach(module => {
+                let isVisible = true;
+
+                if (flagValue !== 'all') {
+                    const isFlagged = module.dataset.flagged === 'true';
+                    if ((flagValue === 'flagged' && !isFlagged) || (flagValue === 'not-flagged' && isFlagged)) {
+                        isVisible = false;
+                    }
+                }
+                
+                if(isVisible && (dateFrom || dateTo)) {
+                    const moduleDate = new Date(module.dataset.timestamp).getTime();
+                    if((dateFrom && moduleDate < dateFrom) || (dateTo && moduleDate > dateTo)) {
+                       isVisible = false;
+                    }
+                }
+                
+                if (isVisible && searchText) {
+                    const moduleText = Array.from(module.querySelectorAll('.editable-cell')).map(c => c.innerText).join(' ').toLowerCase();
+                    const hasOR = searchText.includes(' or ');
+                    const hasNOT = searchText.includes(' not ');
+
+                    if (hasOR) {
+                        isVisible = searchText.split(' or ').some(term => moduleText.includes(term.trim()));
+                    } else if (hasNOT) {
+                        const parts = searchText.split(' not ');
+                        const mustContain = parts[0].trim();
+                        const mustNotContain = parts.slice(1).map(t => t.trim());
+                        isVisible = moduleText.includes(mustContain) && !mustNotContain.some(term => moduleText.includes(term));
+                    } else { // AND di default
+                        isVisible = searchText.split(' and ').every(term => moduleText.includes(term.trim()));
+                    }
+                }
+
+                module.classList.toggle('hidden', !isVisible);
+            });
+        };
+        
+        toggleViewBtn.addEventListener('click', () => {
+            modulesContainer.classList.toggle('titles-only-view');
+            const isTitlesView = modulesContainer.classList.contains('titles-only-view');
+            toggleViewBtn.innerHTML = isTitlesView 
+                ? '<i class="fas fa-expand-arrows-alt"></i> Vista Dettagliata' 
+                : '<i class="fas fa-list"></i> Vista Titoli';
+        });
+
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', () => {
+            filterFlagged.value = 'not-flagged';
+            filterDateFrom.value = '';
+            filterDateTo.value = '';
+            filterText.value = '';
+            applyFilters();
+        });
+
+        // --- CARICAMENTO INIZIALE ---
         loadData();
+        applyFilters(); // Applica il filtro di default ("solo non flaggati") al caricamento
     });
     </script>
 </body>
 </html>
+
