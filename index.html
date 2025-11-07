@@ -514,6 +514,8 @@
                     <button class="module-control-btn toggle-collapse-btn" title="Apri/Chiudi Dettagli"><i class="fas fa-chevron-up"></i></button>
                     <button class="btn btn-secondary btn-copy-ppt"><i class="fas fa-clipboard"></i> Copia per PPT</button>
                     <button class="module-control-btn flag-btn" title="Segna come utilizzato"><i class="far fa-flag"></i></button>
+                    <!-- --- NUOVO BOTTONE DUPLICA --- -->
+                    <button class="module-control-btn duplicate-module-btn" title="Duplica record"><i class="far fa-clone"></i></button>
                     <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
                     <button class="module-control-btn delete-module-btn" title="Elimina record"><i class="fas fa-times"></i></button>
                 </div>
@@ -707,14 +709,31 @@
                 return;
             }
 
-            if (e.target.closest('.flag-btn')) {
-                moduleElement.dataset.flagged = moduleElement.dataset.flagged === 'true' ? 'false' : 'true';
-                updateTimestamp(moduleElement);
-                if (filterFlagged.value !== 'all') {
-                    applyFilters();
+            // --- NUOVA LOGICA DUPLICA ---
+            if (e.target.closest('.duplicate-module-btn')) {
+                const dataToDuplicate = {
+                    flagged: moduleElement.dataset.flagged === 'true',
+                };
+                
+                // 1. Raccoglie i dati dal modulo corrente
+                moduleElement.querySelectorAll('.editable-cell').forEach(cell => {
+                    const fieldName = cell.dataset.field;
+                    dataToDuplicate[fieldName] = cell.innerHTML;
+                });
+                
+                // 2. Aggiunge "(Copia)" al tema per distinguerlo
+                if (dataToDuplicate['tema']) {
+                    dataToDuplicate['tema'] += " (Copia)";
+                } else {
+                    dataToDuplicate['tema'] = "Copia";
                 }
+                
+                // 3. Crea il nuovo modulo (che genera nuovo ID e timestamp)
+                //    'true' lo prepende (mette in cima), come da richiesta precedente
+                createModule(dataToDuplicate, true); 
                 return;
             }
+            // --- FINE NUOVA LOGICA ---
 
             // --- LOGICA DI COPIA ---
             if (e.target.closest('.btn-copy-ppt')) {
