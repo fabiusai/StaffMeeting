@@ -206,21 +206,34 @@
             padding-bottom: 0;
         }
         
+        /* --- MODIFICA 1: Stile Titolo --- */
         .module-title-wrapper {
             flex-grow: 1;
             cursor: pointer;
+            display: flex; /* Titolo e meta sulla stessa riga */
+            align-items: baseline; /* Allinea la base del testo */
+            gap: 15px; /* Spazio tra titolo e meta */
+            flex-wrap: wrap; /* Permette al meta di andare a capo su schermi piccoli */
         }
 
         .module-title {
-            font-size: 1.4rem;
+            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 2.0rem) */
             font-weight: 700;
             color: var(--brand-blue);
             padding: 5px;
             margin: -5px;
             border-radius: var(--border-radius);
             outline: none;
-            width: 100%;
+            width: auto; /* MODIFICATO: Permette al meta di stare accanto (da 100%) */
+            flex-grow: 1; /* Occupa lo spazio rimanente */
+            /* --- MODIFICHE PER RIGA SINGOLA --- */
+            white-space: nowrap; /* Forza la riga singola */
+            overflow: hidden; /* Nasconde il testo che sborda */
+            text-overflow: ellipsis; /* Aggiunge '...' alla fine */
+            min-height: auto; /* Sovrascrive il min-height di .editable-cell */
+            line-height: 1.2; /* Line height più adatta per un titolo */
         }
+        /* --- FINE MODIFICA 1 --- */
 
         .module-title:focus {
             background-color: var(--white);
@@ -228,11 +241,14 @@
             cursor: text;
         }
 
+        /* --- MODIFICA 1: Stile Meta --- */
         .module-meta {
             font-size: 0.8rem;
             color: var(--dark-gray);
-            padding-top: 5px;
+            padding-top: 0; /* MODIFICATO: Rimuove spazio sopra (da 5px) */
+            flex-shrink: 0; /* Impedisce al meta di restringersi */
         }
+        /* --- FINE MODIFICA 1 --- */
 
         .module-actions {
             display: flex;
@@ -289,6 +305,11 @@
             transform: rotate(-180deg);
         }
         
+        /* MODIFICA: Dimensione titolo per blocco CHIUSO (come da immagine) */
+        .module.collapsed .module-title {
+            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 1.7rem) */
+        }
+        
         /* Vista solo Titoli */
         #modules-container.titles-only-view .module-content-wrapper {
             display: none;
@@ -302,7 +323,7 @@
             padding: 10px 15px;
         }
         #modules-container.titles-only-view .module-title {
-            font-size: 1.1rem;
+            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 1.7rem) */
         }
 
 
@@ -338,16 +359,26 @@
             padding: 12px;
             flex-grow: 1;
             overflow-y: auto;
-            min-height: 100px;
+            /* min-height: 100px; --- RIMOSSO DA QUI --- */
             outline: none;
-            font-family: Arial, sans-serif;
-            font-size: 11pt;
-            line-height: 1.5;
+            /* font-family: Arial, sans-serif; --- RIMOSSO DA QUI --- */
+            /* font-size: 11pt; --- RIMOSSO DA QUI --- */
+            /* line-height: 1.5; --- RIMOSSO DA QUI --- */
         }
         
         .editable-cell:focus {
             box-shadow: 0 0 0 2px var(--brand-yellow);
         }
+        
+        /* --- NUOVA REGOLA PER CAMPI DI TESTO --- */
+        /* Applica min-height e stili font solo alle celle nei box */
+        .field-container .editable-cell {
+            min-height: 100px;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+        }
+        /* --- FINE NUOVA REGOLA --- */
         
         .column-desc {
             display: flex;
@@ -580,7 +611,12 @@
 
         // --- FUNZIONI PRINCIPALI ---
 
-        const createModule = (data = {}) => {
+        /**
+         * Crea un nuovo modulo e lo aggiunge al container.
+         * @param {object} data - Dati opzionali per popolare il modulo.
+         * @param {boolean} prepend - Se true, aggiunge il modulo all'inizio (richiesta 2).
+         */
+        const createModule = (data = {}, prepend = false) => { // MODIFICATO per richiesta 2
             const moduleClone = moduleTemplate.content.cloneNode(true);
             const moduleElement = moduleClone.querySelector('.module');
             
@@ -597,7 +633,13 @@
             });
 
             updateModuleVisuals(moduleElement);
-            modulesContainer.appendChild(moduleClone);
+            
+            // MODIFICATO per richiesta 2
+            if (prepend) {
+                modulesContainer.prepend(moduleClone); // Aggiunge in cima
+            } else {
+                modulesContainer.appendChild(moduleClone); // Aggiunge in fondo (per caricamento)
+            }
         };
 
         const updateModuleVisuals = (moduleElement) => {
@@ -798,7 +840,16 @@
                 const data = JSON.parse(savedData);
                 modulesContainer.innerHTML = '';
                 if (data.modules) {
-                    data.modules.forEach(moduleData => createModule(moduleData));
+                    
+                    // MODIFICA 3: Ordinamento di default (più recente -> più vecchio)
+                    data.modules.sort((a, b) => {
+                        const dateA = new Date(a.timestamp || 0);
+                        const dateB = new Date(b.timestamp || 0);
+                        return dateB - dateA;
+                    });
+                    
+                    // Aggiunge i moduli in ordine (createModule userà appendChild di default)
+                    data.modules.forEach(moduleData => createModule(moduleData, false));
                 }
             }
         };
@@ -825,6 +876,10 @@
                 showButtonFeedback(exportBtn, 'Nessun dato', false);
                 return;
             }
+            
+            // Ordina i dati per l'export dal più recente al più vecchio (come la vista)
+            dataForExport.sort((a, b) => new Date(b['Last Update'].split(', ')[0].split('/').reverse().join('-') + 'T' + b['Last Update'].split(', ')[1]) - new Date(a['Last Update'].split(', ')[0].split('/').reverse().join('-') + 'T' + a['Last Update'].split(', ')[1]));
+
 
             const worksheet = XLSX.utils.json_to_sheet(dataForExport);
             const workbook = XLSX.utils.book_new();
@@ -850,7 +905,7 @@
                     const json = XLSX.utils.sheet_to_json(worksheet);
                     
                     if (json.length > 0) {
-                        if (confirm("L'importazione aggiungerà i nuovi record a quelli esistenti. Continuare?")) {
+                        if (confirm("L'importazione aggiungerà i nuovi record a quelli esistenti (in cima all'elenco). Continuare?")) {
                             json.forEach(row => {
                                 const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
                                 const moduleData = {
@@ -861,7 +916,8 @@
                                     'strutture': processText(row['Strutture']),
                                     'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì'
                                 };
-                                createModule(moduleData);
+                                // MODIFICATO per richiesta 2: Aggiunge in cima
+                                createModule(moduleData, true); 
                             });
                         }
                     } else { alert("Il file Excel sembra essere vuoto o non valido."); }
@@ -883,7 +939,8 @@
             }
         });
 
-        addModuleBtn.addEventListener('click', () => createModule());
+        // MODIFICATO per richiesta 2: Aggiunge in cima
+        addModuleBtn.addEventListener('click', () => createModule({}, true));
 
         // --- LOGICA FILTRI E VISTA ---
         
@@ -956,4 +1013,3 @@
     </script>
 </body>
 </html>
-
