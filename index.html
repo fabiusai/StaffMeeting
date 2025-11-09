@@ -597,7 +597,7 @@
         const resetFiltersBtn = document.getElementById('reset-filters-btn');
         const toggleViewBtn = document.getElementById('toggle-view-btn');
 
-        // MODIFICA: Bottoni Ordinamento
+        // Bottoni Ordinamento
         const sortNewestBtn = document.getElementById('sort-newest-btn');
         const sortOldestBtn = document.getElementById('sort-oldest-btn');
         const sortAlphaBtn = document.getElementById('sort-alpha-btn');
@@ -893,8 +893,9 @@
             showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
             const dataForExport = [];
             
-            // Per l'export, usa i moduli visibili nell'ordine in cui sono visualizzati
-            const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module:not(.hidden)'));
+            // --- MODIFICA APPLICATA ---
+            // Ora seleziona TUTTI i moduli, ignorando i filtri (.hidden)
+            const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module'));
 
             // NOTA: l'export rispetterà l'ordinamento attualmente visibile (sia da drag-and-drop che da bottoni di sort)
             
@@ -999,7 +1000,7 @@
         addModuleBtn.addEventListener('click', () => createModule({}, true));
 
 
-        // --- MODIFICA: LOGICA DI RIORDINAMENTO ---
+        // --- LOGICA DI RIORDINAMENTO ---
 
         /**
          * Riordina i moduli nel DOM in base a una funzione di comparazione.
