@@ -471,6 +471,10 @@
                     <button id="apply-filters-btn" class="btn btn-primary"><i class="fas fa-filter"></i> Applica Filtri</button>
                     <button id="reset-filters-btn" class="btn btn-secondary"><i class="fas fa-undo"></i> Resetta Filtri</button>
                     <button id="toggle-view-btn" class="btn btn-secondary"><i class="fas fa-list"></i> Vista Titoli</button>
+                    
+                    <button id="sort-newest-btn" class="btn btn-secondary"><i class="fas fa-sort-amount-down"></i> Più Recenti</button>
+                    <button id="sort-oldest-btn" class="btn btn-secondary"><i class="fas fa-sort-amount-up"></i> Meno Recenti</button>
+                    <button id="sort-alpha-btn" class="btn btn-secondary"><i class="fas fa-sort-alpha-down"></i> Alfabetico (A-Z)</button>
                 </div>
             </section>
 
@@ -593,6 +597,11 @@
         const resetFiltersBtn = document.getElementById('reset-filters-btn');
         const toggleViewBtn = document.getElementById('toggle-view-btn');
 
+        // MODIFICA: Bottoni Ordinamento
+        const sortNewestBtn = document.getElementById('sort-newest-btn');
+        const sortOldestBtn = document.getElementById('sort-oldest-btn');
+        const sortAlphaBtn = document.getElementById('sort-alpha-btn');
+
 
         // --- INIZIALIZZAZIONE ---
         new Sortable(modulesContainer, {
@@ -650,7 +659,7 @@
 
         // NOTA: La funzione 'updateTimestamp' esiste ancora, ma non viene
         // più chiamata dall'evento 'input'. Potrebbe essere usata in futuro
-        // per un bottone "aggiorna data manualmente", ma al momento è inattiva.
+        // per un bottone "aggiorna data manually", ma al momento è inattiva.
         const updateTimestamp = (moduleElement) => {
              moduleElement.dataset.timestamp = new Date().toISOString();
              updateModuleVisuals(moduleElement);
@@ -687,13 +696,29 @@
             const moduleElement = e.target.closest('.module');
             if (!moduleElement) return;
 
+            // Logica per flaggare
+            if (e.target.closest('.flag-btn')) {
+                const flagBtn = e.target.closest('.flag-btn');
+                const isFlagged = moduleElement.dataset.flagged === 'true';
+                moduleElement.dataset.flagged = !isFlagged;
+                updateModuleVisuals(moduleElement);
+                // Non ritorna, così il click può propagare se necessario
+            }
+
             const titleWrapper = e.target.closest('.module-title-wrapper');
             const collapseButton = e.target.closest('.toggle-collapse-btn');
             const titleElement = moduleElement.querySelector('.module-title');
 
-            if (collapseButton || (titleWrapper && document.activeElement !== titleElement)) {
+            // Impedisce di chiudere il modulo se si clicca su un bottone nell'header (es. flag)
+            if (e.target.closest('.module-control-btn') || e.target.closest('.btn-copy-ppt')) {
+                 if (collapseButton) {
+                    moduleElement.classList.toggle('collapsed');
+                 }
+                 // Non continuare se si clicca su un'azione
+            } else if (titleWrapper && document.activeElement !== titleElement) {
                 moduleElement.classList.toggle('collapsed');
             }
+
 
             if (e.target.closest('.delete-module-btn')) {
                 if(confirm('Sei sicuro di voler eliminare questo record?')) {
@@ -817,19 +842,10 @@
             }
         });
         
+        
         // --- MODIFICA APPLICATA ---
         // Il blocco 'modulesContainer.addEventListener('input', ...)' è stato rimosso
         // per impedire l'aggiornamento della data durante la modifica.
-        /*
-        modulesContainer.addEventListener('input', e => {
-            if(e.target.classList.contains('editable-cell')){
-                const moduleElement = e.target.closest('.module');
-                if(moduleElement) updateTimestamp(moduleElement);
-            }
-        });
-        */
-        // --- FINE MODIFICA ---
-
 
         // --- GESTIONE DATI (SALVATAGGIO, CARICAMENTO, ETC) ---
 
@@ -860,7 +876,7 @@
                 modulesContainer.innerHTML = '';
                 if (data.modules) {
                     
-                    // MODIFICA 3: Ordinamento di default (più recente -> più vecchio)
+                    // --- ORDINAMENTO DI DEFAULT (PIU' RECENTE -> PIU' VECCHIO) ---
                     data.modules.sort((a, b) => {
                         const dateA = new Date(a.timestamp || 0);
                         const dateB = new Date(b.timestamp || 0);
@@ -877,22 +893,14 @@
             showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
             const dataForExport = [];
             
-            // MODIFICA: Per l'export, usa i moduli visibili nell'ordine in cui sono visualizzati
-            // Se sono ordinati per data nel DOM, l'export li rispetterà.
+            // Per l'export, usa i moduli visibili nell'ordine in cui sono visualizzati
             const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module:not(.hidden)'));
 
-            // Assicurati che siano ordinati per data (come 'loadData') se l'ordine del DOM
-            // potesse essere alterato dal drag-and-drop.
-            modulesToExport.sort((a, b) => {
-                const dateA = new Date(a.dataset.timestamp || 0);
-                const dateB = new Date(b.dataset.timestamp || 0);
-                return dateB - dateA;
-            });
-
+            // NOTA: l'export rispetterà l'ordinamento attualmente visibile (sia da drag-and-drop che da bottoni di sort)
+            
             modulesToExport.forEach(module => {
                 const row = {};
                 row['Flagged'] = module.dataset.flagged === 'true' ? 'Sì' : 'No';
-                // MODIFICA: La label è stata cambiata da "Last Update" a "Data Creazione"
                 row['Data Creazione'] = new Date(module.dataset.timestamp).toLocaleString('it-IT');
                 
                 module.querySelectorAll('.editable-cell').forEach(cell => {
@@ -909,10 +917,6 @@
                 return;
             }
             
-            // L'ordinamento ora è già gestito sopra
-            // dataForExport.sort((a, b) => ...);
-
-
             const worksheet = XLSX.utils.json_to_sheet(dataForExport);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Meeting');
@@ -993,6 +997,47 @@
 
         // MODIFICATO per richiesta 2: Aggiunge in cima
         addModuleBtn.addEventListener('click', () => createModule({}, true));
+
+
+        // --- MODIFICA: LOGICA DI RIORDINAMENTO ---
+
+        /**
+         * Riordina i moduli nel DOM in base a una funzione di comparazione.
+         * @param {function} sortFunction - La funzione (a, b) => ...
+         */
+        const reorderModules = (sortFunction) => {
+            const modules = Array.from(modulesContainer.querySelectorAll('.module'));
+            
+            modules.sort(sortFunction);
+            
+            // Riassegna gli elementi al container nell'ordine corretto
+            modules.forEach(module => modulesContainer.appendChild(module));
+        };
+
+        // Funzioni di comparazione per l'ordinamento
+        const sortByNewest = (a, b) => {
+            const dateA = new Date(a.dataset.timestamp || 0);
+            const dateB = new Date(b.dataset.timestamp || 0);
+            return dateB - dateA; // Più recente prima
+        };
+
+        const sortByOldest = (a, b) => {
+            const dateA = new Date(a.dataset.timestamp || 0);
+            const dateB = new Date(b.dataset.timestamp || 0);
+            return dateA - dateB; // Meno recente prima
+        };
+
+        const sortByAlphabetical = (a, b) => {
+            const titleA = a.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
+            const titleB = b.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
+            return titleA.localeCompare(titleB); // A-Z
+        };
+
+        // Aggiungi gli event listener ai nuovi bottoni
+        sortNewestBtn.addEventListener('click', () => reorderModules(sortByNewest));
+        sortOldestBtn.addEventListener('click', () => reorderModules(sortByOldest));
+        sortAlphaBtn.addEventListener('click', () => reorderModules(sortByAlphabetical));
+
 
         // --- LOGICA FILTRI E VISTA ---
         
