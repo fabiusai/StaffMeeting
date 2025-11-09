@@ -7,13 +7,11 @@
     
     <link rel="icon" href="favicon.ico">
 
-    <!-- Font e Icone -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Librerie JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -445,7 +443,6 @@
         </header>
 
         <main>
-            <!-- SEZIONE FILTRI -->
             <section id="filtri-section" class="section-card">
                 <h2 class="section-title">Filtri e Vista</h2>
                 <div class="filter-controls">
@@ -477,16 +474,13 @@
                 </div>
             </section>
 
-            <!-- SEZIONE CONTENUTI -->
             <section id="contenuti-section" class="section-card">
                 <h2 class="section-title">Contenuti</h2>
                 <button id="add-module-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Aggiungi Record</button>
                 <div id="modules-container">
-                    <!-- I moduli verranno inseriti qui da JS -->
-                </div>
+                    </div>
             </section>
 
-            <!-- SEZIONE GESTIONE DATI -->
             <section id="gestione-dati-section" class="section-card">
                 <h2 class="section-title">Gestione Dati</h2>
                 <div class="controls-wrapper">
@@ -500,21 +494,19 @@
         </main>
     </div>
 
-    <!-- TEMPLATE PER I MODULI -->
     <template id="module-template">
         <div class="module">
             <div class="module-header">
                 <div class="module-title-wrapper">
                     <h3 class="module-title editable-cell" contenteditable="true" data-field="tema" placeholder="Inserisci il tema qui..."></h3>
                     <div class="module-meta">
-                        Aggiornato il: <span class="module-timestamp"></span>
+                        Creato il: <span class="module-timestamp"></span>
                     </div>
                 </div>
                 <div class="module-actions">
                     <button class="module-control-btn toggle-collapse-btn" title="Apri/Chiudi Dettagli"><i class="fas fa-chevron-up"></i></button>
                     <button class="btn btn-secondary btn-copy-ppt"><i class="fas fa-clipboard"></i> Copia per PPT</button>
                     <button class="module-control-btn flag-btn" title="Segna come utilizzato"><i class="far fa-flag"></i></button>
-                    <!-- --- NUOVO BOTTONE DUPLICA --- -->
                     <button class="module-control-btn duplicate-module-btn" title="Duplica record"><i class="far fa-clone"></i></button>
                     <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
                     <button class="module-control-btn delete-module-btn" title="Elimina record"><i class="fas fa-times"></i></button>
@@ -523,7 +515,6 @@
             
             <div class="module-content-wrapper">
                 <div class="module-content">
-                    <!-- Colonna Descrizioni -->
                     <div class="column-desc">
                         <div class="field-container">
                             <div class="field-label">Descrizione estesa</div>
@@ -547,7 +538,6 @@
                         </div>
                     </div>
 
-                    <!-- Colonna Prossimi Passi -->
                     <div class="module-column flex-1">
                          <div class="field-container">
                             <div class="field-label">Prossimi passi</div>
@@ -561,7 +551,6 @@
                         </div>
                     </div>
 
-                    <!-- Colonna Strutture -->
                     <div class="module-column flex-1">
                         <div class="field-container">
                             <div class="field-label">Strutture</div>
@@ -623,6 +612,7 @@
             const moduleElement = moduleClone.querySelector('.module');
             
             moduleElement.dataset.id = data.id || `module-${Date.now()}`;
+            // Se esiste un timestamp nei dati (es. dal salvataggio), usa quello, altrimenti creane uno nuovo.
             moduleElement.dataset.timestamp = data.timestamp || new Date().toISOString();
             moduleElement.dataset.flagged = data.flagged || 'false';
             
@@ -658,6 +648,9 @@
             flagBtn.title = isFlagged ? 'Rimuovi flag' : 'Segna come utilizzato';
         };
 
+        // NOTA: La funzione 'updateTimestamp' esiste ancora, ma non viene
+        // più chiamata dall'evento 'input'. Potrebbe essere usata in futuro
+        // per un bottone "aggiorna data manualmente", ma al momento è inattiva.
         const updateTimestamp = (moduleElement) => {
              moduleElement.dataset.timestamp = new Date().toISOString();
              updateModuleVisuals(moduleElement);
@@ -824,12 +817,19 @@
             }
         });
         
+        // --- MODIFICA APPLICATA ---
+        // Il blocco 'modulesContainer.addEventListener('input', ...)' è stato rimosso
+        // per impedire l'aggiornamento della data durante la modifica.
+        /*
         modulesContainer.addEventListener('input', e => {
             if(e.target.classList.contains('editable-cell')){
                 const moduleElement = e.target.closest('.module');
                 if(moduleElement) updateTimestamp(moduleElement);
             }
         });
+        */
+        // --- FINE MODIFICA ---
+
 
         // --- GESTIONE DATI (SALVATAGGIO, CARICAMENTO, ETC) ---
 
@@ -864,7 +864,7 @@
                     data.modules.sort((a, b) => {
                         const dateA = new Date(a.timestamp || 0);
                         const dateB = new Date(b.timestamp || 0);
-                        return dateB - dateA;
+                        return dateB - dateA; // Ordina dal più recente al più vecchio
                     });
                     
                     // Aggiunge i moduli in ordine (createModule userà appendChild di default)
@@ -876,17 +876,30 @@
         exportBtn.addEventListener('click', () => {
             showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
             const dataForExport = [];
-            modulesContainer.querySelectorAll('.module').forEach(module => {
-                if (module.classList.contains('hidden')) return;
+            
+            // MODIFICA: Per l'export, usa i moduli visibili nell'ordine in cui sono visualizzati
+            // Se sono ordinati per data nel DOM, l'export li rispetterà.
+            const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module:not(.hidden)'));
 
+            // Assicurati che siano ordinati per data (come 'loadData') se l'ordine del DOM
+            // potesse essere alterato dal drag-and-drop.
+            modulesToExport.sort((a, b) => {
+                const dateA = new Date(a.dataset.timestamp || 0);
+                const dateB = new Date(b.dataset.timestamp || 0);
+                return dateB - dateA;
+            });
+
+            modulesToExport.forEach(module => {
                 const row = {};
                 row['Flagged'] = module.dataset.flagged === 'true' ? 'Sì' : 'No';
-                row['Last Update'] = new Date(module.dataset.timestamp).toLocaleString('it-IT');
+                // MODIFICA: La label è stata cambiata da "Last Update" a "Data Creazione"
+                row['Data Creazione'] = new Date(module.dataset.timestamp).toLocaleString('it-IT');
+                
                 module.querySelectorAll('.editable-cell').forEach(cell => {
                     const label = cell.dataset.field === 'tema' 
                         ? 'Tema' 
                         : cell.closest('.field-container').querySelector('.field-label').innerText;
-                    row[label] = cell.innerText;
+                    row[label] = cell.innerText; // Usa innerText per un Excel pulito (senza HTML)
                 });
                 dataForExport.push(row);
             });
@@ -896,8 +909,8 @@
                 return;
             }
             
-            // Ordina i dati per l'export dal più recente al più vecchio (come la vista)
-            dataForExport.sort((a, b) => new Date(b['Last Update'].split(', ')[0].split('/').reverse().join('-') + 'T' + b['Last Update'].split(', ')[1]) - new Date(a['Last Update'].split(', ')[0].split('/').reverse().join('-') + 'T' + a['Last Update'].split(', ')[1]));
+            // L'ordinamento ora è già gestito sopra
+            // dataForExport.sort((a, b) => ...);
 
 
             const worksheet = XLSX.utils.json_to_sheet(dataForExport);
@@ -927,13 +940,33 @@
                         if (confirm("L'importazione aggiungerà i nuovi record a quelli esistenti (in cima all'elenco). Continuare?")) {
                             json.forEach(row => {
                                 const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
+                                
+                                // Cerca di leggere una data, altrimenti ne crea una nuova
+                                let importTimestamp = new Date().toISOString();
+                                const dateString = row['Data Creazione'] || row['Last Update'];
+                                if (dateString) {
+                                    try {
+                                        // Tenta di parsare la data dal formato it-IT
+                                        const parts = dateString.split(', ')[0].split('/');
+                                        const timeParts = (dateString.split(', ')[1] || '00:00:00').split(':');
+                                        const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}T${timeParts[0]}:${timeParts[1]}:${timeParts[2]}`;
+                                        const parsedDate = new Date(isoDate);
+                                        if (!isNaN(parsedDate)) {
+                                            importTimestamp = parsedDate.toISOString();
+                                        }
+                                    } catch (err) {
+                                        // Ignora l'errore, userà il timestamp corrente
+                                    }
+                                }
+
                                 const moduleData = {
                                     'tema': processText(row['Tema']),
                                     'desc-estesa': processText(row['Descrizione estesa']),
                                     'desc-sintetica': processText(row['Descrizione sintetica']),
                                     'prossimi-passi': processText(row['Prossimi passi']),
                                     'strutture': processText(row['Strutture']),
-                                    'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì'
+                                    'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì',
+                                    'timestamp': importTimestamp // Aggiunge il timestamp letto o nuovo
                                 };
                                 // MODIFICATO per richiesta 2: Aggiunge in cima
                                 createModule(moduleData, true); 
@@ -993,14 +1026,39 @@
                     const hasNOT = searchText.includes(' not ');
 
                     if (hasOR) {
-                        isVisible = searchText.split(' or ').some(term => moduleText.includes(term.trim()));
-                    } else if (hasNOT) {
-                        const parts = searchText.split(' not ');
-                        const mustContain = parts[0].trim();
-                        const mustNotContain = parts.slice(1).map(t => t.trim());
-                        isVisible = moduleText.includes(mustContain) && !mustNotContain.some(term => moduleText.includes(term));
-                    } else { // AND di default
-                        isVisible = searchText.split(' and ').every(term => moduleText.includes(term.trim()));
+                        // Supporta termini multipli con OR
+                        const terms = searchText.split(' or ').map(t => t.trim()).filter(t => t.length > 0);
+                        isVisible = terms.some(term => moduleText.includes(term));
+                    } else {
+                        // Gestisce AND e NOT insieme
+                        const terms = searchText.split(' ').map(t => t.trim()).filter(t => t.length > 0);
+                        let mustContain = [];
+                        let mustNotContain = [];
+
+                        terms.forEach(term => {
+                            if (term.startsWith('not:')) {
+                                mustNotContain.push(term.substring(4));
+                            } else if (term.startsWith('not ')) { // Meno probabile data la logica precedente, ma sicuro
+                                mustNotContain.push(term.substring(4));
+                            } else if (term !== 'and') { // Ignora 'and'
+                                mustContain.push(term);
+                            }
+                        });
+                        
+                        // Se non ci sono 'not:', usa la vecchia logica AND/NOT
+                        if (mustNotContain.length === 0 && hasNOT) {
+                             const parts = searchText.split(' not ');
+                             mustContain = parts[0].trim().split(' and ').map(t => t.trim());
+                             mustNotContain = parts.slice(1).map(t => t.trim());
+                        } else if (mustNotContain.length === 0 && !hasNOT) {
+                             mustContain = searchText.split(' and ').map(t => t.trim());
+                        }
+
+                        // Controlla la visibilità
+                        const matchesAll = mustContain.length === 0 || mustContain.every(term => moduleText.includes(term));
+                        const matchesNone = mustNotContain.length === 0 || !mustNotContain.some(term => term.length > 0 && moduleText.includes(term));
+                        
+                        isVisible = matchesAll && matchesNone;
                     }
                 }
 
