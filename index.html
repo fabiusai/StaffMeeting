@@ -204,7 +204,6 @@
             padding-bottom: 0;
         }
         
-        /* --- MODIFICA 1: Stile Titolo --- */
         .module-title-wrapper {
             flex-grow: 1;
             cursor: pointer;
@@ -215,23 +214,21 @@
         }
 
         .module-title {
-            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 2.0rem) */
+            font-size: 1.6rem; 
             font-weight: 700;
             color: var(--brand-blue);
             padding: 5px;
             margin: -5px;
             border-radius: var(--border-radius);
             outline: none;
-            width: auto; /* MODIFICATO: Permette al meta di stare accanto (da 100%) */
-            flex-grow: 1; /* Occupa lo spazio rimanente */
-            /* --- MODIFICHE PER RIGA SINGOLA --- */
-            white-space: nowrap; /* Forza la riga singola */
-            overflow: hidden; /* Nasconde il testo che sborda */
-            text-overflow: ellipsis; /* Aggiunge '...' alla fine */
-            min-height: auto; /* Sovrascrive il min-height di .editable-cell */
-            line-height: 1.2; /* Line height più adatta per un titolo */
+            width: auto; 
+            flex-grow: 1; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            min-height: auto; 
+            line-height: 1.2; 
         }
-        /* --- FINE MODIFICA 1 --- */
 
         .module-title:focus {
             background-color: var(--white);
@@ -239,14 +236,27 @@
             cursor: text;
         }
 
-        /* --- MODIFICA 1: Stile Meta --- */
         .module-meta {
             font-size: 0.8rem;
             color: var(--dark-gray);
-            padding-top: 0; /* MODIFICATO: Rimuove spazio sopra (da 5px) */
-            flex-shrink: 0; /* Impedisce al meta di restringersi */
+            padding-top: 0; 
+            flex-shrink: 0; 
         }
-        /* --- FINE MODIFICA 1 --- */
+
+        /* --- MODIFICA: Stile per data modificabile --- */
+        .module-timestamp[contenteditable="true"] {
+            outline: none;
+            padding: 2px 5px;
+            margin: -2px -5px;
+            border-radius: 4px;
+            cursor: text;
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+        .module-timestamp[contenteditable="true"]:focus {
+            background-color: var(--white);
+            box-shadow: 0 0 0 2px var(--brand-yellow);
+        }
+        /* --- FINE MODIFICA --- */
 
         .module-actions {
             display: flex;
@@ -254,7 +264,6 @@
             align-items: center;
         }
 
-        /* --- FIX APRI/CHIUDI RECORD --- */
         .module-content-wrapper {
             display: grid;
             grid-template-rows: 1fr;
@@ -303,12 +312,10 @@
             transform: rotate(-180deg);
         }
         
-        /* MODIFICA: Dimensione titolo per blocco CHIUSO (come da immagine) */
         .module.collapsed .module-title {
-            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 1.7rem) */
+            font-size: 1.6rem; 
         }
         
-        /* Vista solo Titoli */
         #modules-container.titles-only-view .module-content-wrapper {
             display: none;
         }
@@ -321,7 +328,7 @@
             padding: 10px 15px;
         }
         #modules-container.titles-only-view .module-title {
-            font-size: 1.6rem; /* MODIFICATO: Dimensione unificata (da 1.7rem) */
+            font-size: 1.6rem; 
         }
 
 
@@ -357,26 +364,19 @@
             padding: 12px;
             flex-grow: 1;
             overflow-y: auto;
-            /* min-height: 100px; --- RIMOSSO DA QUI --- */
             outline: none;
-            /* font-family: Arial, sans-serif; --- RIMOSSO DA QUI --- */
-            /* font-size: 11pt; --- RIMOSSO DA QUI --- */
-            /* line-height: 1.5; --- RIMOSSO DA QUI --- */
         }
         
         .editable-cell:focus {
             box-shadow: 0 0 0 2px var(--brand-yellow);
         }
         
-        /* --- NUOVA REGOLA PER CAMPI DI TESTO --- */
-        /* Applica min-height e stili font solo alle celle nei box */
         .field-container .editable-cell {
             min-height: 100px;
             font-family: Arial, sans-serif;
             font-size: 11pt;
             line-height: 1.5;
         }
-        /* --- FINE NUOVA REGOLA --- */
         
         .column-desc {
             display: flex;
@@ -504,7 +504,8 @@
                 <div class="module-title-wrapper">
                     <h3 class="module-title editable-cell" contenteditable="true" data-field="tema" placeholder="Inserisci il tema qui..."></h3>
                     <div class="module-meta">
-                        Creato il: <span class="module-timestamp"></span>
+                        Creato il: 
+                        <span class="module-timestamp" contenteditable="true" title="Clicca per modificare la data (formato: GG/MM/AAAA, HH:MM)"></span>
                     </div>
                 </div>
                 <div class="module-actions">
@@ -616,12 +617,11 @@
          * @param {object} data - Dati opzionali per popolare il modulo.
          * @param {boolean} prepend - Se true, aggiunge il modulo all'inizio (richiesta 2).
          */
-        const createModule = (data = {}, prepend = false) => { // MODIFICATO per richiesta 2
+        const createModule = (data = {}, prepend = false) => {
             const moduleClone = moduleTemplate.content.cloneNode(true);
             const moduleElement = moduleClone.querySelector('.module');
             
             moduleElement.dataset.id = data.id || `module-${Date.now()}`;
-            // Se esiste un timestamp nei dati (es. dal salvataggio), usa quello, altrimenti creane uno nuovo.
             moduleElement.dataset.timestamp = data.timestamp || new Date().toISOString();
             moduleElement.dataset.flagged = data.flagged || 'false';
             
@@ -635,17 +635,17 @@
 
             updateModuleVisuals(moduleElement);
             
-            // MODIFICATO per richiesta 2
             if (prepend) {
-                modulesContainer.prepend(moduleClone); // Aggiunge in cima
+                modulesContainer.prepend(moduleClone); 
             } else {
-                modulesContainer.appendChild(moduleClone); // Aggiunge in fondo (per caricamento)
+                modulesContainer.appendChild(moduleClone); 
             }
         };
 
         const updateModuleVisuals = (moduleElement) => {
             const timestampEl = moduleElement.querySelector('.module-timestamp');
             const date = new Date(moduleElement.dataset.timestamp);
+            // MODIFICA: Ora popola lo span (che sia modificabile o meno)
             timestampEl.textContent = date.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
             const isFlagged = moduleElement.dataset.flagged === 'true';
@@ -657,9 +657,6 @@
             flagBtn.title = isFlagged ? 'Rimuovi flag' : 'Segna come utilizzato';
         };
 
-        // NOTA: La funzione 'updateTimestamp' esiste ancora, ma non viene
-        // più chiamata dall'evento 'input'. Potrebbe essere usata in futuro
-        // per un bottone "aggiorna data manually", ma al momento è inattiva.
         const updateTimestamp = (moduleElement) => {
              moduleElement.dataset.timestamp = new Date().toISOString();
              updateModuleVisuals(moduleElement);
@@ -682,15 +679,63 @@
             }, duration);
         };
 
+        // --- MODIFICA: Funzione helper per parsare la data ---
+        /**
+         * Converte il testo della data (GG/MM/AAAA, HH:MM) in una stringa ISO.
+         * @param {string} text - Il testo dalla cella modificabile.
+         * @returns {string|null} - La stringa ISO o null se non valida.
+         */
+        const parseTimestampText = (text) => {
+            try {
+                const parts = text.split(', '); // ["GG/MM/AAAA", "HH:MM"]
+                const dateParts = parts[0].split('/'); // ["GG", "MM", "AAAA"]
+                const timeParts = parts[1].split(':'); // ["HH", "MM"]
+                // Formato ISO: AAAA-MM-GGTHH:MM:SS
+                const isoString = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timeParts[0]}:${timeParts[1]}:00`;
+                const d = new Date(isoString);
+                // Controlla se la data è valida (es. 31/02/2025 non è valido)
+                if (isNaN(d.getTime()) || d.getDate() !== parseInt(dateParts[0]) || (d.getMonth() + 1) !== parseInt(dateParts[1])) {
+                    return null;
+                }
+                return d.toISOString();
+            } catch (e) { 
+                return null; // Errore nel parsing (es. formato sbagliato)
+            }
+        };
+
         // --- GESTIONE EVENTI ---
 
         modulesContainer.addEventListener('paste', (e) => {
-            if (e.target.classList.contains('editable-cell')) {
+            // MODIFICA: Consenti l'incolla come testo semplice anche nella data
+            if (e.target.classList.contains('editable-cell') || e.target.classList.contains('module-timestamp')) {
                 e.preventDefault();
                 const text = (e.clipboardData || window.clipboardData).getData('text/plain');
                 document.execCommand('insertText', false, text);
             }
         });
+
+        // --- MODIFICA: Listener per validare la data modificata ---
+        modulesContainer.addEventListener('blur', (e) => {
+            if (e.target.classList.contains('module-timestamp')) {
+                const moduleElement = e.target.closest('.module');
+                if (!moduleElement) return;
+
+                const timestampText = e.target.innerText.trim();
+                const newIsoTimestamp = parseTimestampText(timestampText);
+
+                if (newIsoTimestamp) {
+                    // Data valida, aggiorna il dataset
+                    moduleElement.dataset.timestamp = newIsoTimestamp;
+                    // Riformatta il testo per coerenza
+                    e.target.innerText = new Date(newIsoTimestamp).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } else {
+                    // Data non valida, ripristina il valore originale
+                    alert("Formato data non valido. Usa GG/MM/AAAA, HH:MM");
+                    const originalDate = new Date(moduleElement.dataset.timestamp);
+                    e.target.innerText = originalDate.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
+        }, true); // Usa 'capture' per 'blur' per catturare l'evento in modo affidabile
 
         modulesContainer.addEventListener('click', async (e) => {
             const moduleElement = e.target.closest('.module');
@@ -702,19 +747,22 @@
                 const isFlagged = moduleElement.dataset.flagged === 'true';
                 moduleElement.dataset.flagged = !isFlagged;
                 updateModuleVisuals(moduleElement);
-                // Non ritorna, così il click può propagare se necessario
             }
 
             const titleWrapper = e.target.closest('.module-title-wrapper');
             const collapseButton = e.target.closest('.toggle-collapse-btn');
             const titleElement = moduleElement.querySelector('.module-title');
+            
+            // MODIFICA: Non collassare se si clicca sulla data
+            if (e.target.classList.contains('module-timestamp')) {
+                return;
+            }
 
             // Impedisce di chiudere il modulo se si clicca su un bottone nell'header (es. flag)
             if (e.target.closest('.module-control-btn') || e.target.closest('.btn-copy-ppt')) {
                  if (collapseButton) {
                     moduleElement.classList.toggle('collapsed');
                  }
-                 // Non continuare se si clicca su un'azione
             } else if (titleWrapper && document.activeElement !== titleElement) {
                 moduleElement.classList.toggle('collapsed');
             }
@@ -727,33 +775,26 @@
                 return;
             }
 
-            // --- NUOVA LOGICA DUPLICA ---
             if (e.target.closest('.duplicate-module-btn')) {
                 const dataToDuplicate = {
                     flagged: moduleElement.dataset.flagged === 'true',
                 };
                 
-                // 1. Raccoglie i dati dal modulo corrente
                 moduleElement.querySelectorAll('.editable-cell').forEach(cell => {
                     const fieldName = cell.dataset.field;
                     dataToDuplicate[fieldName] = cell.innerHTML;
                 });
                 
-                // 2. Aggiunge "(Copia)" al tema per distinguerlo
                 if (dataToDuplicate['tema']) {
                     dataToDuplicate['tema'] += " (Copia)";
                 } else {
                     dataToDuplicate['tema'] = "Copia";
                 }
                 
-                // 3. Crea il nuovo modulo (che genera nuovo ID e timestamp)
-                //    'true' lo prepende (mette in cima), come da richiesta precedente
                 createModule(dataToDuplicate, true); 
                 return;
             }
-            // --- FINE NUOVA LOGICA ---
 
-            // --- LOGICA DI COPIA ---
             if (e.target.closest('.btn-copy-ppt')) {
                 const button = e.target.closest('.btn-copy-ppt');
                 const fieldsToCopy = ['tema', 'desc-estesa', 'prossimi-passi', 'strutture'];
@@ -769,15 +810,12 @@
                     switch(fieldName) {
                         case 'tema':
                             return `<p style="${commonStyle} ${themeColor} font-weight: bold;">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-                        
                         case 'desc-estesa':
                              if (!cleanedText) return `<p></p>`;
                             return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-
                         case 'prossimi-passi':
                         case 'strutture':
                             return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-                        
                         default:
                             return escapeHtml(cleanedText).replace(/\n/g, '<br>');
                     }
@@ -843,18 +881,31 @@
         });
         
         
-        // --- MODIFICA APPLICATA ---
-        // Il blocco 'modulesContainer.addEventListener('input', ...)' è stato rimosso
-        // per impedire l'aggiornamento della data durante la modifica.
-
         // --- GESTIONE DATI (SALVATAGGIO, CARICAMENTO, ETC) ---
 
         saveBtn.addEventListener('click', () => {
             const modulesData = [];
             modulesContainer.querySelectorAll('.module').forEach(module => {
+                
+                // --- MODIFICA: Leggi e parsa la data modificabile prima di salvare ---
+                const timestampText = module.querySelector('.module-timestamp').innerText.trim();
+                const newIsoTimestamp = parseTimestampText(timestampText); // Usa la funzione helper
+                
+                // Aggiorna il dataset del modulo *prima* di salvarlo,
+                // così se il parsing fallisce, salva l'ultimo valore valido
+                if (newIsoTimestamp) {
+                     module.dataset.timestamp = newIsoTimestamp;
+                } else {
+                    // Se il formato è errato al momento del salvataggio,
+                    // ripristina il testo e avvisa l'utente.
+                    alert(`Formato data errato per il record: "${module.querySelector('.module-title').innerText}". Salvataggio annullato per la data.`);
+                    updateModuleVisuals(module); // Ripristina il testo
+                }
+                // --- FINE MODIFICA ---
+
                 const moduleData = {
                     id: module.dataset.id,
-                    timestamp: module.dataset.timestamp,
+                    timestamp: module.dataset.timestamp, // Ora usa il valore aggiornato/validato
                     flagged: module.dataset.flagged === 'true',
                 };
                 module.querySelectorAll('.editable-cell').forEach(cell => {
@@ -876,14 +927,12 @@
                 modulesContainer.innerHTML = '';
                 if (data.modules) {
                     
-                    // --- ORDINAMENTO DI DEFAULT (PIU' RECENTE -> PIU' VECCHIO) ---
                     data.modules.sort((a, b) => {
                         const dateA = new Date(a.timestamp || 0);
                         const dateB = new Date(b.timestamp || 0);
                         return dateB - dateA; // Ordina dal più recente al più vecchio
                     });
                     
-                    // Aggiunge i moduli in ordine (createModule userà appendChild di default)
                     data.modules.forEach(moduleData => createModule(moduleData, false));
                 }
             }
@@ -893,11 +942,7 @@
             showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
             const dataForExport = [];
             
-            // --- MODIFICA APPLICATA ---
-            // Ora seleziona TUTTI i moduli, ignorando i filtri (.hidden)
             const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module'));
-
-            // NOTA: l'export rispetterà l'ordinamento attualmente visibile (sia da drag-and-drop che da bottoni di sort)
             
             modulesToExport.forEach(module => {
                 const row = {};
@@ -908,7 +953,7 @@
                     const label = cell.dataset.field === 'tema' 
                         ? 'Tema' 
                         : cell.closest('.field-container').querySelector('.field-label').innerText;
-                    row[label] = cell.innerText; // Usa innerText per un Excel pulito (senza HTML)
+                    row[label] = cell.innerText; 
                 });
                 dataForExport.push(row);
             });
@@ -946,7 +991,6 @@
                             json.forEach(row => {
                                 const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
                                 
-                                // Cerca di leggere una data, altrimenti ne crea una nuova
                                 let importTimestamp = new Date().toISOString();
                                 const dateString = row['Data Creazione'] || row['Last Update'];
                                 if (dateString) {
@@ -954,14 +998,12 @@
                                         // Tenta di parsare la data dal formato it-IT
                                         const parts = dateString.split(', ')[0].split('/');
                                         const timeParts = (dateString.split(', ')[1] || '00:00:00').split(':');
-                                        const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}T${timeParts[0]}:${timeParts[1]}:${timeParts[2]}`;
+                                        const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}T${timeParts[0]}:${timeParts[1]}:${timeParts[2] || '00'}`;
                                         const parsedDate = new Date(isoDate);
                                         if (!isNaN(parsedDate)) {
                                             importTimestamp = parsedDate.toISOString();
                                         }
-                                    } catch (err) {
-                                        // Ignora l'errore, userà il timestamp corrente
-                                    }
+                                    } catch (err) { }
                                 }
 
                                 const moduleData = {
@@ -971,11 +1013,21 @@
                                     'prossimi-passi': processText(row['Prossimi passi']),
                                     'strutture': processText(row['Strutture']),
                                     'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì',
-                                    'timestamp': importTimestamp // Aggiunge il timestamp letto o nuovo
+                                    'timestamp': importTimestamp 
                                 };
-                                // MODIFICATO per richiesta 2: Aggiunge in cima
                                 createModule(moduleData, true); 
                             });
+
+                            // --- MODIFICA: Azioni post-importazione ---
+                            // 1. Riordina tutto per data più recente
+                            reorderModules(sortByNewest);
+                            
+                            // 2. Imposta il filtro su "Solo non flaggati"
+                            filterFlagged.value = 'not-flagged';
+                            
+                            // 3. Applica i filtri
+                            applyFilters();
+                            // --- FINE MODIFICA ---
                         }
                     } else { alert("Il file Excel sembra essere vuoto o non valido."); }
                 } catch (error) {
@@ -996,45 +1048,35 @@
             }
         });
 
-        // MODIFICATO per richiesta 2: Aggiunge in cima
         addModuleBtn.addEventListener('click', () => createModule({}, true));
 
 
         // --- LOGICA DI RIORDINAMENTO ---
 
-        /**
-         * Riordina i moduli nel DOM in base a una funzione di comparazione.
-         * @param {function} sortFunction - La funzione (a, b) => ...
-         */
         const reorderModules = (sortFunction) => {
             const modules = Array.from(modulesContainer.querySelectorAll('.module'));
-            
             modules.sort(sortFunction);
-            
-            // Riassegna gli elementi al container nell'ordine corretto
             modules.forEach(module => modulesContainer.appendChild(module));
         };
 
-        // Funzioni di comparazione per l'ordinamento
         const sortByNewest = (a, b) => {
             const dateA = new Date(a.dataset.timestamp || 0);
             const dateB = new Date(b.dataset.timestamp || 0);
-            return dateB - dateA; // Più recente prima
+            return dateB - dateA; 
         };
 
         const sortByOldest = (a, b) => {
             const dateA = new Date(a.dataset.timestamp || 0);
             const dateB = new Date(b.dataset.timestamp || 0);
-            return dateA - dateB; // Meno recente prima
+            return dateA - dateB; 
         };
 
         const sortByAlphabetical = (a, b) => {
             const titleA = a.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
             const titleB = b.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
-            return titleA.localeCompare(titleB); // A-Z
+            return titleA.localeCompare(titleB);
         };
 
-        // Aggiungi gli event listener ai nuovi bottoni
         sortNewestBtn.addEventListener('click', () => reorderModules(sortByNewest));
         sortOldestBtn.addEventListener('click', () => reorderModules(sortByOldest));
         sortAlphaBtn.addEventListener('click', () => reorderModules(sortByAlphabetical));
@@ -1072,11 +1114,9 @@
                     const hasNOT = searchText.includes(' not ');
 
                     if (hasOR) {
-                        // Supporta termini multipli con OR
                         const terms = searchText.split(' or ').map(t => t.trim()).filter(t => t.length > 0);
                         isVisible = terms.some(term => moduleText.includes(term));
                     } else {
-                        // Gestisce AND e NOT insieme
                         const terms = searchText.split(' ').map(t => t.trim()).filter(t => t.length > 0);
                         let mustContain = [];
                         let mustNotContain = [];
@@ -1084,14 +1124,13 @@
                         terms.forEach(term => {
                             if (term.startsWith('not:')) {
                                 mustNotContain.push(term.substring(4));
-                            } else if (term.startsWith('not ')) { // Meno probabile data la logica precedente, ma sicuro
+                            } else if (term.startsWith('not ')) { 
                                 mustNotContain.push(term.substring(4));
-                            } else if (term !== 'and') { // Ignora 'and'
+                            } else if (term !== 'and') { 
                                 mustContain.push(term);
                             }
                         });
                         
-                        // Se non ci sono 'not:', usa la vecchia logica AND/NOT
                         if (mustNotContain.length === 0 && hasNOT) {
                              const parts = searchText.split(' not ');
                              mustContain = parts[0].trim().split(' and ').map(t => t.trim());
@@ -1100,7 +1139,6 @@
                              mustContain = searchText.split(' and ').map(t => t.trim());
                         }
 
-                        // Controlla la visibilità
                         const matchesAll = mustContain.length === 0 || mustContain.every(term => moduleText.includes(term));
                         const matchesNone = mustNotContain.length === 0 || !mustNotContain.some(term => term.length > 0 && moduleText.includes(term));
                         
