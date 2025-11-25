@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool Staff Meeting - v13.2 (String Fix)</title>
+    <title>Tool Staff Meeting - v13.3 (Duplica)</title>
     
     <link rel="icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -156,6 +156,7 @@
                 <div class="module-actions">
                     <button class="icon-btn toggle-collapse" title="Espandi/Riduci"><i class="fas fa-chevron-up"></i></button>
                     <button class="icon-btn btn-copy-ppt" title="Copia per PPT (Arial 11, No Bullets)"><i class="fas fa-clipboard"></i></button>
+                    <button class="icon-btn clone-btn" title="Duplica"><i class="far fa-clone"></i></button>
                     <button class="icon-btn flag-btn" title="Flag"><i class="far fa-flag"></i></button>
                     <button class="icon-btn drag-handle" title="Sposta"><i class="fas fa-grip-vertical"></i></button>
                     <button class="icon-btn delete" title="Elimina"><i class="fas fa-times"></i></button>
@@ -200,37 +201,22 @@
             let autoSaveTimeout;
             
             // --- PARSER DI DATE "LETTERALE" (STRING-BASED) ---
-            // Converte stringhe italiane (es. "21/11/2025, 11:19:00") DIRETTAMENTE in formato input (YYYY-MM-DDTHH:mm)
-            // SENZA passare per l'oggetto Date() per evitare cambi di fuso orario.
             const convertExcelStringToInput = (str) => {
                 if (!str) return '';
                 str = String(str).trim();
-
-                // Caso: stringa ISO già formattata o quasi (dal JSON)
                 if (str.match(/^\d{4}-\d{2}-\d{2}T/)) return str.substring(0, 16);
-
-                // Caso: Formato Italiano Excel "DD/MM/YYYY, HH:mm:ss" o "DD/MM/YYYY HH:mm"
-                // Regex cattura: Giorno(1), Mese(2), Anno(3), Ora(4), Min(5)
                 const match = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:[\s,]+(\d{1,2})[:\.](\d{1,2}))?/);
-                
                 if (match) {
                     const d = match[1].padStart(2, '0');
                     const m = match[2].padStart(2, '0');
                     let y = match[3];
                     if (y.length === 2) y = "20" + y;
-
                     const hh = (match[4] || '00').padStart(2, '0');
                     const mm = (match[5] || '00').padStart(2, '0');
-                    
-                    // Ritorna SOLO la stringa, niente calcoli
                     return `${y}-${m}-${d}T${hh}:${mm}`;
                 }
-
-                // Fallback estremo per numeri seriali Excel (se proprio non è stringa)
-                // Qui dobbiamo usare Date, ma cerchiamo di compensare il locale
                 if (!isNaN(str) && Number(str) > 30000) {
                     const dateObj = new Date(Math.round((str - 25569)*86400*1000));
-                    // Converti in stringa locale manualmente per evitare UTC shift
                     const Y = dateObj.getFullYear();
                     const M = String(dateObj.getMonth() + 1).padStart(2, '0');
                     const D = String(dateObj.getDate()).padStart(2, '0');
@@ -238,11 +224,9 @@
                     const Min = String(dateObj.getMinutes()).padStart(2, '0');
                     return `${Y}-${M}-${D}T${H}:${Min}`;
                 }
-
                 return ''; 
             };
 
-            // Funzione per ottenere data corrente in stringa locale
             const getNowString = () => {
                 const now = new Date();
                 const pad = n => String(n).padStart(2, '0');
@@ -284,10 +268,8 @@
 
                 el.querySelector('.module-preview-text').innerText = el.querySelector('[data-field="desc-sintetica"]').innerText;
 
-                // DATE LOGIC: Usa direttamente la stringa, o crea stringa "adesso"
                 const dateInput = el.querySelector('.module-date-input');
                 if (data.timestamp) {
-                    // Se arriva da Excel (stringa strana) la pulisce, se da JSON (ISO) la tiene
                     dateInput.value = convertExcelStringToInput(data.timestamp);
                 } else {
                     dateInput.value = getNowString();
@@ -302,6 +284,7 @@
                 if (container.classList.contains('titles-view')) el.classList.add('collapsed');
                 if (prepend) container.prepend(el); else container.appendChild(el);
                 updateCounter();
+                return el; // Return element for duplication logic
             }
 
             // EVENTS
@@ -314,6 +297,36 @@
                     if (e.target.closest('.mini-copy-btn')) return;
                     module.classList.toggle('collapsed');
                 }
+                
+                // NUOVA LOGICA DUPLICA
+                if (e.target.closest('.clone-btn')) {
+                    const original = module;
+                    const data = {
+                        tema: original.querySelector('[data-field="tema"]').innerHTML,
+                        'desc-estesa': original.querySelector('[data-field="desc-estesa"]').innerHTML,
+                        'desc-sintetica': original.querySelector('[data-field="desc-sintetica"]').innerHTML,
+                        'prossimi-passi': original.querySelector('[data-field="prossimi-passi"]').innerHTML,
+                        'strutture': original.querySelector('[data-field="strutture"]').innerHTML,
+                        timestamp: original.querySelector('.module-date-input').value,
+                        flagged: original.classList.contains('flagged')
+                    };
+                    
+                    const newEl = createModule(data); // Crea ma appende in fondo
+                    // Sposta il nuovo elemento subito sotto l'originale
+                    if (original.nextSibling) {
+                        container.insertBefore(newEl, original.nextSibling);
+                    } else {
+                        container.appendChild(newEl);
+                    }
+                    triggerAutoSave();
+                    
+                    // Feedback visivo sul bottone
+                    const btn = e.target.closest('.clone-btn');
+                    const oldHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = oldHtml, 1000);
+                }
+
                 if (e.target.closest('.flag-btn')) {
                     const btn = e.target.closest('.flag-btn');
                     module.classList.toggle('flagged');
@@ -325,7 +338,6 @@
                 if (e.target.closest('.tool-btn')) { e.preventDefault(); document.execCommand(e.target.closest('.tool-btn').dataset.cmd, false, null); }
                 if (e.target.closest('.btn-copy-ppt')) copyToClipboard(module);
                 
-                // Copy buttons
                 if (e.target.closest('.copy-title-btn')) copyText(module.querySelector('.module-title').innerText, e.target.closest('.copy-title-btn'));
                 if (e.target.closest('.copy-desc-btn')) copyText(module.querySelector('.module-preview-text').innerText, e.target.closest('.copy-desc-btn'));
             });
@@ -350,14 +362,13 @@
                 autoSaveTimeout = setTimeout(() => { saveToStorage(); ind.classList.remove('visible'); }, 1000); 
             }
 
-            // SALVATAGGIO: Salva la stringa DATA pura (YYYY-MM-DDTHH:mm), non oggetti Date
             function saveToStorage() {
                 const data = [];
                 container.querySelectorAll('.module').forEach(m => {
                     data.push({
                         id: m.dataset.id,
                         flagged: m.classList.contains('flagged'),
-                        timestamp: m.querySelector('.module-date-input').value, // SALVA LA STRINGA ESATTA
+                        timestamp: m.querySelector('.module-date-input').value,
                         tema: m.querySelector('[data-field="tema"]').innerHTML,
                         'desc-estesa': m.querySelector('[data-field="desc-estesa"]').innerHTML,
                         'desc-sintetica': m.querySelector('[data-field="desc-sintetica"]').innerHTML,
@@ -412,7 +423,7 @@
             window.sortModules = (order) => {
                 const mods = Array.from(container.querySelectorAll('.module'));
                 mods.sort((a, b) => {
-                    const va = a.querySelector('.module-date-input').value; // Confronto lessicografico stringhe ISO funziona sempre
+                    const va = a.querySelector('.module-date-input').value;
                     const vb = b.querySelector('.module-date-input').value;
                     return order === 'newest' ? (vb > va ? 1 : -1) : (va > vb ? 1 : -1);
                 });
@@ -420,7 +431,6 @@
             };
 
             async function copyToClipboard(module) {
-                // Logica PPT identica
                 const clean = h => h.replace(/<[^>]+>/g, '').trim();
                 const tema = module.querySelector('[data-field="tema"]').innerHTML;
                 const desc = clean(module.querySelector('[data-field="desc-estesa"]').innerHTML);
@@ -439,13 +449,15 @@
                 } catch(e) { alert("Errore copia: " + e); }
             }
 
-            // EXPORT / IMPORT
             document.getElementById('export-json-btn').addEventListener('click', () => {
                 const json = localStorage.getItem('staffMeetingData_v3');
                 if(!json) return;
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const ts = `${now.getFullYear()}_${pad(now.getMonth()+1)}_${pad(now.getDate())}_${pad(now.getHours())}_${pad(now.getMinutes())}`;
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([json], {type:"application/json"}));
-                a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+                a.download = `staff_meeting_${ts}.json`; a.click();
             });
 
             document.getElementById('export-excel-btn').addEventListener('click', () => {
@@ -472,7 +484,6 @@
                 else document.getElementById('file-input-json').click();
             });
 
-            // JSON IMPORT: Usa le stringhe così come sono (fidelity assoluta)
             document.getElementById('file-input-json').addEventListener('change', (e) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
@@ -488,17 +499,14 @@
                 e.target.value='';
             });
 
-            // EXCEL IMPORT: Parsa la stringa senza conversioni di Timezone
             document.getElementById('file-input-excel').addEventListener('change', (e) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    // raw: false lascia che sheetjs ci dia stringhe formattate se possibile
                     const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array', cellDates: false}); 
                     const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {raw: false});
                     
                     if(json.length > 0 && confirm(`Importare ${json.length} record Excel?`)) {
                         json.forEach(row => {
-                            // Cerca colonne comuni
                             let rawDate = row['Data'] || row['Date'] || row['Timestamp'] || row['Data Creazione'];
                             createModule({
                                 tema: row['Tema'] || row['Oggetto'], 
@@ -507,7 +515,7 @@
                                 'prossimi-passi': row['Prossimi passi'],
                                 strutture: row['Strutture'], 
                                 flagged: (row['Flagged']||row['Stato']||'').toLowerCase().includes('chiuso') || (row['Flagged']||'').toLowerCase().includes('sì'),
-                                timestamp: rawDate // Passiamo la stringa grezza al parser "letterale"
+                                timestamp: rawDate
                             }, true);
                         });
                         triggerAutoSave();
