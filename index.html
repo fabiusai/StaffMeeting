@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool per Staff Meeting</title>
+    <title>Tool Staff Meeting - v13.2 (String Fix)</title>
     
     <link rel="icon" href="favicon.ico">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,1152 +15,518 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* --- IMPOSTAZIONI GENERALI E COLORI --- */
-        :root {
-            --brand-blue: #00338D;
-            --brand-yellow: #FFD200;
-            --light-gray: #f0f1f3;
-            --medium-gray: #e1e3e6;
-            --dark-gray: #6c757d;
-            --text-color: #333;
-            --white: #ffffff;
-            --border-radius: 6px;
-            --success-green: #28a745;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Titillium Web', sans-serif;
-            background-color: var(--light-gray);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        /* --- LAYOUT PRINCIPALE E HEADER --- */
-        .app-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background-color: var(--brand-blue);
-            color: var(--white);
-            padding: 20px;
-            text-align: center;
-            border-radius: var(--border-radius);
-            margin-bottom: 25px;
-            border-bottom: 5px solid var(--brand-yellow);
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-        
-        /* --- SEZIONI --- */
-        .section-card {
-            background-color: var(--white);
-            padding: 25px;
-            border-radius: var(--border-radius);
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--brand-blue);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--medium-gray);
-        }
-        
-        /* --- BOTTONI --- */
-        .btn {
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
-            text-align: center;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn:active {
-            transform: translateY(1px);
-        }
-        
-        .btn-primary {
-            background-color: var(--brand-blue);
-            color: var(--white);
-        }
-        .btn-primary:hover {
-            background-color: #002266;
-        }
-
-        .btn-secondary {
-            background-color: var(--brand-yellow);
-            color: var(--brand-blue);
-        }
-        .btn-secondary:hover {
-            background-color: #e6bd00;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        
-        .controls-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        /* --- SEZIONE FILTRI --- */
-        #filtri-section .filter-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            align-items: end;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .filter-group label {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .filter-group input, .filter-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--border-radius);
-            font-family: 'Titillium Web', sans-serif;
-        }
-        .filter-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding-top: 20px;
-        }
-
-        /* --- SEZIONE CONTENUTI E MODULI --- */
-        .module {
-            background-color: #fafafa;
-            border: 1px solid var(--medium-gray);
-            border-left: 5px solid transparent;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            padding: 15px;
-            position: relative;
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-
-        .module.flagged {
-            border-left-color: var(--brand-yellow);
-            background-color: #fffbef;
-        }
-
-        .module.hidden {
-            display: none;
-        }
-
-        .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--medium-gray);
-            flex-wrap: wrap;
-            gap: 10px;
-            transition: margin 0.4s ease-in-out, padding 0.4s ease-in-out, border-color 0.4s ease-in-out;
-        }
-
-        .module.collapsed .module-header {
-            border-bottom-color: transparent;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .module-title-wrapper {
-            flex-grow: 1;
-            cursor: pointer;
-            display: flex; /* Titolo e meta sulla stessa riga */
-            align-items: baseline; /* Allinea la base del testo */
-            gap: 15px; /* Spazio tra titolo e meta */
-            flex-wrap: wrap; /* Permette al meta di andare a capo su schermi piccoli */
-        }
-
-        .module-title {
-            font-size: 1.6rem; 
-            font-weight: 700;
-            color: var(--brand-blue);
-            padding: 5px;
-            margin: -5px;
-            border-radius: var(--border-radius);
-            outline: none;
-            width: auto; 
-            flex-grow: 1; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            min-height: auto; 
-            line-height: 1.2; 
-        }
-
-        .module-title:focus {
-            background-color: var(--white);
-            box-shadow: 0 0 0 2px var(--brand-yellow);
-            cursor: text;
-        }
-
-        .module-meta {
-            font-size: 0.8rem;
-            color: var(--dark-gray);
-            padding-top: 0; 
-            flex-shrink: 0; 
-        }
-
-        .module-timestamp[contenteditable="true"] {
-            outline: none;
-            padding: 2px 5px;
-            margin: -2px -5px;
-            border-radius: 4px;
-            cursor: text;
-            transition: box-shadow 0.2s, background-color 0.2s;
-        }
-        .module-timestamp[contenteditable="true"]:focus {
-            background-color: var(--white);
-            box-shadow: 0 0 0 2px var(--brand-yellow);
-        }
-
-        .module-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        /* --- FIX APRI/CHIUDI RECORD --- */
-        .module-content-wrapper {
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: grid-template-rows 0.4s ease-in-out;
-        }
-        
-        .module.collapsed .module-content-wrapper {
-            grid-template-rows: 0fr;
-        }
-
-        .module-content {
-            overflow: hidden;
-            min-height: 0;
-            display: flex;
-            gap: 15px;
-            padding-top: 5px;
-        }
-        
-        .module-control-btn {
-            background: var(--medium-gray);
-            color: var(--dark-gray);
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s, transform 0.3s;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .module-control-btn.drag-handle { cursor: grab; }
-        .module-control-btn.delete-module-btn { background-color: #fce1e4; color: #dc3545; }
-        .module-control-btn:hover { background-color: var(--dark-gray); color: var(--white); }
-        .module-control-btn.delete-module-btn:hover { background-color: #dc3545; color: var(--white); }
-
-        .module-control-btn.flag-btn.flagged {
-            background-color: var(--brand-yellow);
-            color: var(--brand-blue);
-        }
-
-        .module.collapsed .toggle-collapse-btn {
-            transform: rotate(-180deg);
-        }
-        
-        .module.collapsed .module-title {
-            font-size: 1.6rem; 
-        }
-        
-        /* 'display: none' rimosso per permettere apertura singola in Vista Titoli */
-        #modules-container.titles-only-view .module-content-wrapper {
-            /* display: none; */
-        }
-        #modules-container.titles-only-view .module-header {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-         #modules-container.titles-only-view .module {
-            padding: 10px 15px;
-        }
-        #modules-container.titles-only-view .module-title {
-            font-size: 1.6rem;
-        }
-
-
-        .module-column {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .flex-2 { flex: 2; }
-        .flex-1 { flex: 1; }
-
-        .field-container {
-            background: var(--white);
-            border: 1px solid #ccc;
-            border-radius: var(--border-radius);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .field-label {
-            font-weight: 600;
-            padding: 8px 12px;
-            background: var(--medium-gray);
-            border-bottom: 1px solid #ccc;
-            border-top-left-radius: var(--border-radius);
-            border-top-right-radius: var(--border-radius);
-            color: var(--brand-blue);
-        }
-
-        .editable-cell {
-            padding: 12px;
-            flex-grow: 1;
-            overflow-y: auto;
-            outline: none;
-        }
-        
-        .editable-cell:focus {
-            box-shadow: 0 0 0 2px var(--brand-yellow);
-        }
-        
-        .field-container .editable-cell {
-            min-height: 100px;
-            font-family: Arial, sans-serif;
-            font-size: 11pt;
-            line-height: 1.5;
-        }
-        
-        .column-desc {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            flex: 2;
-        }
-        .column-desc .field-container:first-child { flex-grow: 3; }
-        .column-desc .field-container:last-child { flex-grow: 1; }
-        .column-desc .field-container:last-child .editable-cell { min-height: 50px; }
-
-        .field-toolbar {
-            padding: 5px 12px;
-            background: var(--light-gray);
-            border-top: 1px solid #ccc;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .tool-icon {
-            cursor: pointer;
-            color: var(--dark-gray);
-            font-size: 16px;
-            transition: color 0.2s;
-        }
-
-        .tool-icon:hover {
-            color: var(--brand-blue);
-        }
-        
-        /* --- RESPONSIVE --- */
-        @media (max-width: 1200px) {
-            .module-content {
-                flex-wrap: wrap;
-            }
-            .module-content > .module-column {
-                min-width: 45%;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            header h1 { font-size: 1.8rem; }
-            .section-title { font-size: 1.5rem; }
-            
-            .module-content {
-                flex-direction: column;
-            }
-             .module-content > .module-column {
-                min-width: 100%;
-            }
-            .controls-wrapper, .filter-buttons {
-                flex-direction: column;
-            }
-            .btn { width: 100%; }
-        }
+        /* --- CSS BASE (Invariato) --- */
+        :root { --brand-blue: #00338D; --brand-yellow: #FFD200; --light-gray: #f4f6f9; --border-color: #ced4da; --text-color: #212529; --white: #ffffff; --success: #28a745; --danger: #dc3545; --radius: 6px; --shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; padding: 0; font-family: 'Titillium Web', sans-serif; background: var(--light-gray); color: var(--text-color); padding-bottom: 50px; }
+        .app-container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--light-gray); padding-bottom: 15px; padding-top: 10px; box-shadow: 0 4px 6px -6px rgba(0,0,0,0.4); margin-bottom: 20px; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; background: var(--brand-blue); color: var(--white); padding: 15px 25px; border-radius: var(--radius); border-bottom: 4px solid var(--brand-yellow); }
+        .header-title h1 { margin: 0; font-size: 1.8rem; text-transform: uppercase; }
+        .save-indicator { opacity: 0; transition: opacity 0.3s; font-weight: bold; color: var(--brand-yellow); }
+        .save-indicator.visible { opacity: 1; }
+        .main-controls { display: flex; gap: 10px; flex-wrap: wrap; background: var(--white); padding: 15px; border-radius: var(--radius); margin-top: 15px; border: 1px solid var(--border-color); align-items: center; }
+        .separator { width: 1px; background: var(--border-color); height: 30px; margin: 0 5px; }
+        .filter-stats { font-size: 0.9rem; color: #666; margin-left: auto; font-weight: 600; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn:hover { filter: brightness(95%); transform: translateY(-1px); }
+        .btn-primary { background: var(--brand-blue); color: var(--white); }
+        .btn-accent { background: var(--brand-yellow); color: var(--brand-blue); }
+        .btn-success { background: var(--success); color: var(--white); }
+        .btn-danger { background: var(--danger); color: var(--white); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
+        .filters-panel { display: none; background: #e9ecef; padding: 15px; border-radius: var(--radius); margin-top: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .filters-panel.active { display: grid; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; }
+        .module { background: var(--white); border: 1px solid var(--border-color); border-left: 5px solid var(--brand-blue); border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow); transition: all 0.3s ease; }
+        .module.flagged { border-left-color: var(--brand-yellow); background-color: #fffdf5; }
+        .module.hidden { display: none; }
+        .module-header { padding: 15px; display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+        .module-main-info { flex-grow: 1; display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+        .header-top-row { display: flex; align-items: flex-start; gap: 15px; flex-wrap: wrap; justify-content: space-between; }
+        .title-wrapper { display: flex; align-items: center; gap: 8px; flex-grow: 1; }
+        .module-title { font-size: 1.4rem; font-weight: 700; color: var(--brand-blue); border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; }
+        .module-title:focus { border-color: var(--brand-yellow); background: #fff; }
+        .module-date-input { font-family: inherit; font-size: 0.9rem; color: #666; border: 1px solid transparent; background: transparent; cursor: pointer; padding: 4px; width: 210px; margin-top: 2px; }
+        .module-date-input:hover { border-color: #ccc; background: #fff; }
+        .preview-row { display: none; align-items: center; gap: 8px; margin-top: 5px; }
+        .module.collapsed .preview-row { display: flex; }
+        .module-preview-text { font-size: 0.95rem; color: #666; font-style: italic; padding-left: 5px; }
+        .mini-copy-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; padding: 4px; transition: color 0.2s; display: flex; align-items: center; }
+        .mini-copy-btn:hover { color: var(--brand-blue); }
+        .module-actions { display: flex; gap: 5px; }
+        .icon-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f0f0f0; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .icon-btn:hover { background: #e0e0e0; color: #000; }
+        .icon-btn.drag-handle { cursor: grab; }
+        .icon-btn.active-flag { background: var(--brand-yellow); color: var(--brand-blue); }
+        .icon-btn.delete { color: var(--danger); background: #fff5f5; }
+        .icon-btn.delete:hover { background: var(--danger); color: white; }
+        .module-body { padding: 15px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .module-body { grid-template-columns: 1fr; } }
+        .field-box { background: #fff; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-direction: column; height: 100%; }
+        .field-header { background: #f8f9fa; padding: 8px 10px; font-weight: 600; font-size: 0.9rem; color: var(--brand-blue); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .editor-toolbar { display: flex; gap: 8px; }
+        .tool-btn { cursor: pointer; color: #999; font-size: 0.8rem; }
+        .tool-btn:hover { color: var(--brand-blue); }
+        .editable-area { padding: 12px; min-height: 120px; overflow-y: auto; flex-grow: 1; font-family: Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+        .editable-area ul { padding-left: 20px; margin: 5px 0; }
+        .editable-area:focus { background-color: #fdfeff; box-shadow: inset 0 0 0 2px var(--brand-blue); }
+        .module.collapsed .module-body { display: none; }
+        .module.collapsed .module-header { border-bottom: none; }
+        .module.collapsed .toggle-collapse i { transform: rotate(180deg); }
+        #drop-zone { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 51, 141, 0.9); z-index: 2000; color: white; justify-content: center; align-items: center; font-size: 2rem; flex-direction: column; }
+        #drop-zone.active { display: flex; }
     </style>
 </head>
 <body>
 
+    <div id="drop-zone">
+        <i class="fas fa-file-import fa-3x" style="margin-bottom: 20px;"></i>
+        <div>Rilascia qui il file (Excel o JSON)</div>
+    </div>
+
     <div class="app-container">
-        <header>
-            <h1>Tool per Staff Meeting</h1>
-        </header>
+        <div class="sticky-header">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1><i class="fas fa-briefcase"></i> Staff Meeting Tool</h1>
+                </div>
+                <div class="header-status">
+                    <span id="save-feedback" class="save-indicator"><i class="fas fa-sync fa-spin"></i> Salvataggio...</span>
+                </div>
+            </header>
+            <div class="main-controls">
+                <button id="add-btn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Nuovo</button>
+                <div class="separator"></div>
+                <button id="toggle-filters-btn" class="btn btn-outline"><i class="fas fa-filter"></i> Filtri / Strumenti</button>
+                <button id="toggle-view-btn" class="btn btn-outline"><i class="fas fa-expand"></i> Vista Dettagli</button>
+                <div class="separator"></div>
+                <button id="export-excel-btn" class="btn btn-success"><i class="fas fa-file-excel"></i> Excel</button>
+                <button id="export-json-btn" class="btn btn-outline"><i class="fas fa-file-code"></i> Backup</button>
+                <button id="import-btn" class="btn btn-outline"><i class="fas fa-upload"></i> Importa</button>
+                <div class="separator"></div>
+                <button id="reset-data-btn" class="btn btn-danger"><i class="fas fa-trash"></i> Reset App</button>
+                <input type="file" id="file-input-excel" accept=".xlsx, .xls, .csv" style="display:none">
+                <input type="file" id="file-input-json" accept=".json" style="display:none">
+                <div id="modules-counter" class="filter-stats">0 record</div>
+            </div>
 
-        <main>
-            <section id="filtri-section" class="section-card">
-                <h2 class="section-title">Filtri e Vista</h2>
-                <div class="filter-controls">
-                    <div class="filter-group">
-                        <label for="filter-flagged">Stato</label>
-                        <select id="filter-flagged">
-                            <option value="not-flagged">Solo non flaggati</option>
-                            <option value="all">Tutti</option>
-                            <option value="flagged">Solo flaggati</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-date-from">Data Da</label>
-                        <input type="date" id="filter-date-from">
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-date-to">Data A</label>
-                        <input type="date" id="filter-date-to">
-                    </div>
-                    <div class="filter-group">
-                        <label for="filter-text">Ricerca Testo (es: Poste AND Italiane)</label>
-                        <input type="text" id="filter-text" placeholder="Usa AND, OR, NOT...">
+            <div id="filters-panel" class="filters-panel">
+                <div class="form-group">
+                    <label>Ricerca Testo</label>
+                    <input type="text" id="search-input" class="form-control" placeholder="Cerca...">
+                </div>
+                <div class="form-group">
+                    <label>Stato</label>
+                    <select id="filter-status" class="form-control">
+                        <option value="all">Tutti</option>
+                        <option value="active" selected>Attivi (Non utilizzati)</option>
+                        <option value="flagged">Utilizzati (Flag)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Strumenti</label>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-outline btn-sm" onclick="sortModules('newest')" title="Ordina per data">Date <i class="fas fa-arrow-down"></i></button>
+                        <button id="remove-duplicates-btn" class="btn btn-outline btn-sm" title="Rimuove record identici" style="color: #dc3545; border-color: #dc3545;"><i class="fas fa-clone"></i> No Duplicati</button>
                     </div>
                 </div>
-                <div class="filter-buttons">
-                    <button id="apply-filters-btn" class="btn btn-primary"><i class="fas fa-filter"></i> Applica Filtri</button>
-                    <button id="reset-filters-btn" class="btn btn-secondary"><i class="fas fa-undo"></i> Resetta Filtri</button>
-                    <button id="toggle-view-btn" class="btn btn-secondary"><i class="fas fa-list"></i> Vista Titoli</button>
-                    
-                    <button id="sort-newest-btn" class="btn btn-secondary"><i class="fas fa-sort-amount-down"></i> Più Recenti</button>
-                    <button id="sort-oldest-btn" class="btn btn-secondary"><i class="fas fa-sort-amount-up"></i> Meno Recenti</button>
-                    <button id="sort-alpha-btn" class="btn btn-secondary"><i class="fas fa-sort-alpha-down"></i> Alfabetico (A-Z)</button>
-                </div>
-            </section>
-
-            <section id="contenuti-section" class="section-card">
-                <h2 class="section-title">Contenuti</h2>
-                <button id="add-module-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Aggiungi Record</button>
-                <div id="modules-container">
-                    </div>
-            </section>
-
-            <section id="gestione-dati-section" class="section-card">
-                <h2 class="section-title">Gestione Dati</h2>
-                <div class="controls-wrapper">
-                    <button id="save-btn" class="btn btn-primary"><i class="fas fa-save"></i> Salva nel Browser</button>
-                    <button id="export-btn" class="btn btn-secondary"><i class="fas fa-file-excel"></i> Esporta in Excel</button>
-                    <button id="import-btn" class="btn btn-secondary"><i class="fas fa-file-upload"></i> Importa da Excel</button>
-                    <input type="file" id="import-file" accept=".xlsx, .xls" style="display: none;">
-                    <button id="reset-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Resetta Tool</button>
-                </div>
-            </section>
-        </main>
+            </div>
+        </div>
+        <div id="modules-container"></div>
     </div>
 
     <template id="module-template">
         <div class="module">
             <div class="module-header">
-                <div class="module-title-wrapper">
-                    <h3 class="module-title editable-cell" contenteditable="true" data-field="tema" placeholder="Inserisci il tema qui..."></h3>
-                    <div class="module-meta">
-                        Creato il: 
-                        <span class="module-timestamp" contenteditable="true" title="Clicca per modificare la data (formato: GG/MM/AAAA, HH:MM)"></span>
+                <div class="module-main-info">
+                    <div class="header-top-row">
+                        <div class="title-wrapper">
+                            <div class="module-title" contenteditable="true" data-field="tema" placeholder="Oggetto del meeting..."></div>
+                            <button class="mini-copy-btn copy-title-btn" title="Copia Titolo"><i class="far fa-copy"></i></button>
+                        </div>
+                        <input type="datetime-local" class="module-date-input">
+                    </div>
+                    <div class="preview-row">
+                        <div class="module-preview-text"></div>
+                        <button class="mini-copy-btn copy-desc-btn" title="Copia Descrizione"><i class="far fa-copy"></i></button>
                     </div>
                 </div>
                 <div class="module-actions">
-                    <button class="module-control-btn toggle-collapse-btn" title="Apri/Chiudi Dettagli"><i class="fas fa-chevron-up"></i></button>
-                    <button class="btn btn-secondary btn-copy-ppt"><i class="fas fa-clipboard"></i> Copia per PPT</button>
-                    <button class="module-control-btn flag-btn" title="Segna come utilizzato"><i class="far fa-flag"></i></button>
-                    <button class="module-control-btn duplicate-module-btn" title="Duplica record"><i class="far fa-clone"></i></button>
-                    <button class="module-control-btn drag-handle" title="Trascina per riordinare"><i class="fas fa-grip-vertical"></i></button>
-                    <button class="module-control-btn delete-module-btn" title="Elimina record"><i class="fas fa-times"></i></button>
+                    <button class="icon-btn toggle-collapse" title="Espandi/Riduci"><i class="fas fa-chevron-up"></i></button>
+                    <button class="icon-btn btn-copy-ppt" title="Copia per PPT (Arial 11, No Bullets)"><i class="fas fa-clipboard"></i></button>
+                    <button class="icon-btn flag-btn" title="Flag"><i class="far fa-flag"></i></button>
+                    <button class="icon-btn drag-handle" title="Sposta"><i class="fas fa-grip-vertical"></i></button>
+                    <button class="icon-btn delete" title="Elimina"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-            
-            <div class="module-content-wrapper">
-                <div class="module-content">
-                    <div class="column-desc">
-                        <div class="field-container">
-                            <div class="field-label">Descrizione estesa</div>
-                            <div class="editable-cell" contenteditable="true" data-field="desc-estesa"></div>
-                             <div class="field-toolbar">
-                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                                <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
+            <div class="module-body">
+                <div style="display:flex; flex-direction:column; gap:15px;">
+                    <div class="field-box" style="flex:2">
+                        <div class="field-header">Descrizione Estesa
+                            <div class="editor-toolbar">
+                                <i class="fas fa-bold tool-btn" data-cmd="bold"></i>
+                                <i class="fas fa-list-ul tool-btn" data-cmd="insertUnorderedList"></i>
+                                <i class="fas fa-eraser tool-btn" data-cmd="removeFormat"></i>
                             </div>
                         </div>
-                        <div class="field-container">
-                            <div class="field-label">Descrizione sintetica</div>
-                            <div class="editable-cell" contenteditable="true" data-field="desc-sintetica"></div>
-                             <div class="field-toolbar">
-                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
-                            </div>
-                        </div>
+                        <div class="editable-area" contenteditable="true" data-field="desc-estesa"></div>
                     </div>
-
-                    <div class="module-column flex-1">
-                         <div class="field-container">
-                            <div class="field-label">Prossimi passi</div>
-                            <div class="editable-cell" contenteditable="true" data-field="prossimi-passi"></div>
-                             <div class="field-toolbar">
-                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
-                            </div>
-                        </div>
+                    <div class="field-box" style="flex:1">
+                        <div class="field-header">Descrizione Sintetica</div>
+                        <div class="editable-area" contenteditable="true" data-field="desc-sintetica"></div>
                     </div>
-
-                    <div class="module-column flex-1">
-                        <div class="field-container">
-                            <div class="field-label">Strutture</div>
-                            <div class="editable-cell" contenteditable="true" data-field="strutture"></div>
-                             <div class="field-toolbar">
-                                <i class="fas fa-copy tool-icon" title="Copia testo" data-action="copy"></i>
-                                 <i class="fas fa-font tool-icon" title="Testo selezionato in MAIUSCOLO" data-action="uppercase"></i>
-                                <i class="fas fa-italic tool-icon" style="text-transform: lowercase; font-style: normal;" title="Testo selezionato in minuscolo" data-action="lowercase">a</i>
-                                <i class="fas fa-heading tool-icon" title="Iniziali Maiuscole" data-action="capitalize"></i>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                <div class="field-box">
+                    <div class="field-header">Prossimi Passi</div>
+                    <div class="editable-area" contenteditable="true" data-field="prossimi-passi"></div>
+                </div>
+                <div class="field-box">
+                    <div class="field-header">Strutture</div>
+                    <div class="editable-area" contenteditable="true" data-field="strutture"></div>
                 </div>
             </div>
         </div>
     </template>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- ELEMENTI DEL DOM ---
-        const modulesContainer = document.getElementById('modules-container');
-        const moduleTemplate = document.getElementById('module-template');
-        
-        // Bottoni Contenuti
-        const addModuleBtn = document.getElementById('add-module-btn');
-        
-        // Bottoni Gestione Dati
-        const saveBtn = document.getElementById('save-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const importBtn = document.getElementById('import-btn');
-        const importFileInput = document.getElementById('import-file');
-        const resetBtn = document.getElementById('reset-btn');
-
-        // Controlli Filtri
-        const filterFlagged = document.getElementById('filter-flagged');
-        const filterDateFrom = document.getElementById('filter-date-from');
-        const filterDateTo = document.getElementById('filter-date-to');
-        const filterText = document.getElementById('filter-text');
-        const applyFiltersBtn = document.getElementById('apply-filters-btn');
-        const resetFiltersBtn = document.getElementById('reset-filters-btn');
-        const toggleViewBtn = document.getElementById('toggle-view-btn');
-
-        // Bottoni Ordinamento
-        const sortNewestBtn = document.getElementById('sort-newest-btn');
-        const sortOldestBtn = document.getElementById('sort-oldest-btn');
-        const sortAlphaBtn = document.getElementById('sort-alpha-btn');
-
-
-        // --- INIZIALIZZAZIONE ---
-        new Sortable(modulesContainer, {
-            animation: 150,
-            handle: '.drag-handle',
-        });
-
-        // --- FUNZIONI PRINCIPALI ---
-
-        const createModule = (data = {}, prepend = false) => {
-            const moduleClone = moduleTemplate.content.cloneNode(true);
-            const moduleElement = moduleClone.querySelector('.module');
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('modules-container');
+            const template = document.getElementById('module-template');
+            const searchInput = document.getElementById('search-input');
+            const statusFilter = document.getElementById('filter-status');
+            const counterElement = document.getElementById('modules-counter');
+            let autoSaveTimeout;
             
-            moduleElement.dataset.id = data.id || `module-${Date.now()}`;
-            moduleElement.dataset.timestamp = data.timestamp || new Date().toISOString();
-            moduleElement.dataset.flagged = data.flagged || 'false';
-            
-            const fields = moduleElement.querySelectorAll('.editable-cell');
-            fields.forEach(field => {
-                const fieldName = field.dataset.field;
-                if (data[fieldName]) {
-                    field.innerHTML = data[fieldName];
-                }
-            });
+            // --- PARSER DI DATE "LETTERALE" (STRING-BASED) ---
+            // Converte stringhe italiane (es. "21/11/2025, 11:19:00") DIRETTAMENTE in formato input (YYYY-MM-DDTHH:mm)
+            // SENZA passare per l'oggetto Date() per evitare cambi di fuso orario.
+            const convertExcelStringToInput = (str) => {
+                if (!str) return '';
+                str = String(str).trim();
 
-            updateModuleVisuals(moduleElement);
-            
-            if (prepend) {
-                modulesContainer.prepend(moduleClone); 
-            } else {
-                modulesContainer.appendChild(moduleClone); 
-            }
-        };
+                // Caso: stringa ISO già formattata o quasi (dal JSON)
+                if (str.match(/^\d{4}-\d{2}-\d{2}T/)) return str.substring(0, 16);
 
-        const updateModuleVisuals = (moduleElement) => {
-            const timestampEl = moduleElement.querySelector('.module-timestamp');
-            const date = new Date(moduleElement.dataset.timestamp);
-            timestampEl.textContent = date.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-            const isFlagged = moduleElement.dataset.flagged === 'true';
-            moduleElement.classList.toggle('flagged', isFlagged);
-            const flagBtn = moduleElement.querySelector('.flag-btn');
-            const flagIcon = flagBtn.querySelector('i');
-            flagBtn.classList.toggle('flagged', isFlagged);
-            flagIcon.className = isFlagged ? 'fas fa-flag' : 'far fa-flag';
-            flagBtn.title = isFlagged ? 'Rimuovi flag' : 'Segna come utilizzato';
-        };
-
-        const updateTimestamp = (moduleElement) => {
-             moduleElement.dataset.timestamp = new Date().toISOString();
-             updateModuleVisuals(moduleElement);
-        }
-
-        const showButtonFeedback = (button, message, isSuccess = true, duration = 1500) => {
-            const originalContent = button.innerHTML;
-            button.innerHTML = message;
-            button.disabled = true;
-            
-            const originalBg = button.style.backgroundColor;
-            if(isSuccess) {
-                button.style.backgroundColor = 'var(--success-green)';
-            }
-
-            setTimeout(() => {
-                button.innerHTML = originalContent;
-                button.disabled = false;
-                button.style.backgroundColor = originalBg;
-            }, duration);
-        };
-
-        /**
-         * Converte il testo della data (GG/MM/AAAA, HH:MM) in una stringa ISO.
-         * @param {string} text - Il testo dalla cella modificabile.
-         * @returns {string|null} - La stringa ISO o null se non valida.
-         */
-        const parseTimestampText = (text) => {
-            try {
-                const parts = text.split(', '); // ["GG/MM/AAAA", "HH:MM"]
-                const dateParts = parts[0].split('/'); // ["GG", "MM", "AAAA"]
-                const timeParts = parts[1].split(':'); // ["HH", "MM"]
-                // Formato ISO: AAAA-MM-GGTHH:MM:SS
-                const isoString = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T${timeParts[0]}:${timeParts[1]}:00`;
-                const d = new Date(isoString);
-                // Controlla se la data è valida (es. 31/02/2025 non è valido)
-                if (isNaN(d.getTime()) || d.getDate() !== parseInt(dateParts[0]) || (d.getMonth() + 1) !== parseInt(dateParts[1])) {
-                    return null;
-                }
-                return d.toISOString();
-            } catch (e) { 
-                return null; // Errore nel parsing (es. formato sbagliato)
-            }
-        };
-
-        // --- GESTIONE EVENTI ---
-
-        modulesContainer.addEventListener('paste', (e) => {
-            if (e.target.classList.contains('editable-cell') || e.target.classList.contains('module-timestamp')) {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                document.execCommand('insertText', false, text);
-            }
-        });
-
-        modulesContainer.addEventListener('blur', (e) => {
-            if (e.target.classList.contains('module-timestamp')) {
-                const moduleElement = e.target.closest('.module');
-                if (!moduleElement) return;
-
-                const timestampText = e.target.innerText.trim();
-                const newIsoTimestamp = parseTimestampText(timestampText);
-
-                if (newIsoTimestamp) {
-                    moduleElement.dataset.timestamp = newIsoTimestamp;
-                    e.target.innerText = new Date(newIsoTimestamp).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                } else {
-                    alert("Formato data non valido. Usa GG/MM/AAAA, HH:MM");
-                    const originalDate = new Date(moduleElement.dataset.timestamp);
-                    e.target.innerText = originalDate.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                }
-            }
-        }, true); 
-
-        modulesContainer.addEventListener('click', async (e) => {
-            const moduleElement = e.target.closest('.module');
-            if (!moduleElement) return;
-
-            if (e.target.closest('.flag-btn')) {
-                const flagBtn = e.target.closest('.flag-btn');
-                const isFlagged = moduleElement.dataset.flagged === 'true';
-                moduleElement.dataset.flagged = !isFlagged;
-                updateModuleVisuals(moduleElement);
-            }
-
-            const titleWrapper = e.target.closest('.module-title-wrapper');
-            const collapseButton = e.target.closest('.toggle-collapse-btn');
-            const titleElement = moduleElement.querySelector('.module-title');
-            
-            if (e.target.classList.contains('module-timestamp')) {
-                return;
-            }
-
-            if (e.target.closest('.module-control-btn') || e.target.closest('.btn-copy-ppt')) {
-                 if (collapseButton) {
-                    moduleElement.classList.toggle('collapsed');
-                 }
-            } else if (titleWrapper && document.activeElement !== titleElement) {
-                moduleElement.classList.toggle('collapsed');
-            }
-
-
-            if (e.target.closest('.delete-module-btn')) {
-                if(confirm('Sei sicuro di voler eliminare questo record?')) {
-                    moduleElement.remove();
-                }
-                return;
-            }
-
-            if (e.target.closest('.duplicate-module-btn')) {
-                const dataToDuplicate = {
-                    flagged: moduleElement.dataset.flagged === 'true',
-                };
+                // Caso: Formato Italiano Excel "DD/MM/YYYY, HH:mm:ss" o "DD/MM/YYYY HH:mm"
+                // Regex cattura: Giorno(1), Mese(2), Anno(3), Ora(4), Min(5)
+                const match = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:[\s,]+(\d{1,2})[:\.](\d{1,2}))?/);
                 
-                moduleElement.querySelectorAll('.editable-cell').forEach(cell => {
-                    const fieldName = cell.dataset.field;
-                    dataToDuplicate[fieldName] = cell.innerHTML;
-                });
-                
-                if (dataToDuplicate['tema']) {
-                    dataToDuplicate['tema'] += " (Copia)";
-                } else {
-                    dataToDuplicate['tema'] = "Copia";
-                }
-                
-                createModule(dataToDuplicate, true); 
-                return;
-            }
+                if (match) {
+                    const d = match[1].padStart(2, '0');
+                    const m = match[2].padStart(2, '0');
+                    let y = match[3];
+                    if (y.length === 2) y = "20" + y;
 
-            if (e.target.closest('.btn-copy-ppt')) {
-                const button = e.target.closest('.btn-copy-ppt');
-                const fieldsToCopy = ['tema', 'desc-estesa', 'prossimi-passi', 'strutture'];
-                
-                const getStyledHtmlForField = (fieldName, text) => {
-                    const commonStyle = "font-family: Arial, sans-serif; font-size: 11pt; margin: 0; padding: 0;";
-                    const blackColor = "color: #000000;";
-                    const themeColor = "color: #2a4979;"; 
-                    const cleanedText = text.trim();
+                    const hh = (match[4] || '00').padStart(2, '0');
+                    const mm = (match[5] || '00').padStart(2, '0');
                     
-                    const escapeHtml = (unsafe) => unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-                    switch(fieldName) {
-                        case 'tema':
-                            return `<p style="${commonStyle} ${themeColor} font-weight: bold;">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-                        case 'desc-estesa':
-                             if (!cleanedText) return `<p></p>`;
-                            return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-                        case 'prossimi-passi':
-                        case 'strutture':
-                            return `<p style="${commonStyle} ${blackColor}">${escapeHtml(cleanedText).replace(/\n/g, '<br>')}</p>`;
-                        default:
-                            return escapeHtml(cleanedText).replace(/\n/g, '<br>');
-                    }
-                };
-
-                const htmlCells = fieldsToCopy.map(fieldName => {
-                    const field = moduleElement.querySelector(`.editable-cell[data-field="${fieldName}"]`);
-                    const text = field ? field.innerText : '';
-                    const styledHtml = getStyledHtmlForField(fieldName, text);
-                    return `<td style="vertical-align: top;">${styledHtml}</td>`;
-                }).join('');
-
-                const htmlString = `<table><tbody><tr>${htmlCells}</tr></tbody></table>`;
-
-                const textPlain = fieldsToCopy.map(fieldName => {
-                    const field = moduleElement.querySelector(`.editable-cell[data-field="${fieldName}"]`);
-                    return field ? field.innerText : '';
-                }).join('\t');
-                
-                try {
-                    const blobHtml = new Blob([htmlString], { type: 'text/html' });
-                    const blobText = new Blob([textPlain], { type: 'text/plain' });
-                    const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
-                    
-                    await navigator.clipboard.write(data);
-                    showButtonFeedback(button, 'Copiato! <i class="fas fa-check"></i>');
-                } catch(err) {
-                    showButtonFeedback(button, 'Errore', false);
-                }
-                return;
-            }
-
-            const toolIcon = e.target.closest('.tool-icon');
-            if (toolIcon) {
-                const action = toolIcon.dataset.action;
-                const editableCell = toolIcon.closest('.field-container').querySelector('.editable-cell');
-                editableCell.focus();
-
-                const transformSelection = (transformFn) => {
-                    const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
-                        const range = selection.getRangeAt(0);
-                        const selectedText = range.toString();
-                        if (selectedText) {
-                            range.deleteContents();
-                            range.insertNode(document.createTextNode(transformFn(selectedText)));
-                        }
-                    }
-                };
-
-                switch (action) {
-                    case 'copy':
-                        navigator.clipboard.writeText(editableCell.innerText).then(() => {
-                           toolIcon.classList.replace('fa-copy', 'fa-check');
-                           setTimeout(() => toolIcon.classList.replace('fa-check', 'fa-copy'), 1500);
-                        });
-                        break;
-                    case 'uppercase': transformSelection(text => text.toUpperCase()); break;
-                    case 'lowercase': transformSelection(text => text.toLowerCase()); break;
-                    case 'capitalize': transformSelection(text => text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase())); break;
-                }
-            }
-        });
-        
-        
-        // --- GESTIONE DATI (SALVATAGGIO, CARICAMENTO, ETC) ---
-
-        saveBtn.addEventListener('click', () => {
-            const modulesData = [];
-            modulesContainer.querySelectorAll('.module').forEach(module => {
-                
-                const timestampText = module.querySelector('.module-timestamp').innerText.trim();
-                const newIsoTimestamp = parseTimestampText(timestampText); 
-                
-                if (newIsoTimestamp) {
-                     module.dataset.timestamp = newIsoTimestamp;
-                } else {
-                    alert(`Formato data errato per il record: "${module.querySelector('.module-title').innerText}". Salvataggio annullato per la data.`);
-                    updateModuleVisuals(module); 
+                    // Ritorna SOLO la stringa, niente calcoli
+                    return `${y}-${m}-${d}T${hh}:${mm}`;
                 }
 
-                const moduleData = {
-                    id: module.dataset.id,
-                    timestamp: module.dataset.timestamp, 
-                    flagged: module.dataset.flagged === 'true',
-                };
-                module.querySelectorAll('.editable-cell').forEach(cell => {
-                    const fieldName = cell.dataset.field;
-                    moduleData[fieldName] = cell.innerHTML;
-                });
-                modulesData.push(moduleData);
-            });
-            
-            const dataToSave = { modules: modulesData };
-            localStorage.setItem('staffMeetingDataV2', JSON.stringify(dataToSave));
-            showButtonFeedback(saveBtn, 'Salvato! <i class="fas fa-check"></i>');
-        });
-
-        const loadData = () => {
-            const savedData = localStorage.getItem('staffMeetingDataV2');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                modulesContainer.innerHTML = '';
-                if (data.modules) {
-                    
-                    data.modules.sort((a, b) => {
-                        const dateA = new Date(a.timestamp || 0);
-                        const dateB = new Date(b.timestamp || 0);
-                        return dateB - dateA; 
-                    });
-                    
-                    data.modules.forEach(moduleData => createModule(moduleData, false));
+                // Fallback estremo per numeri seriali Excel (se proprio non è stringa)
+                // Qui dobbiamo usare Date, ma cerchiamo di compensare il locale
+                if (!isNaN(str) && Number(str) > 30000) {
+                    const dateObj = new Date(Math.round((str - 25569)*86400*1000));
+                    // Converti in stringa locale manualmente per evitare UTC shift
+                    const Y = dateObj.getFullYear();
+                    const M = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const D = String(dateObj.getDate()).padStart(2, '0');
+                    const H = String(dateObj.getHours()).padStart(2, '0');
+                    const Min = String(dateObj.getMinutes()).padStart(2, '0');
+                    return `${Y}-${M}-${D}T${H}:${Min}`;
                 }
-            }
-        };
 
-        exportBtn.addEventListener('click', () => {
-            showButtonFeedback(exportBtn, 'Esporto...', true, 3000);
-            const dataForExport = [];
-            
-            const modulesToExport = Array.from(modulesContainer.querySelectorAll('.module'));
-            
-            modulesToExport.forEach(module => {
-                const row = {};
-                row['Flagged'] = module.dataset.flagged === 'true' ? 'Sì' : 'No';
-                row['Data Creazione'] = new Date(module.dataset.timestamp).toLocaleString('it-IT');
-                
-                module.querySelectorAll('.editable-cell').forEach(cell => {
-                    const label = cell.dataset.field === 'tema' 
-                        ? 'Tema' 
-                        : cell.closest('.field-container').querySelector('.field-label').innerText;
-                    row[label] = cell.innerText; 
-                });
-                dataForExport.push(row);
-            });
-
-            if (dataForExport.length === 0) {
-                showButtonFeedback(exportBtn, 'Nessun dato', false);
-                return;
-            }
-            
-            const worksheet = XLSX.utils.json_to_sheet(dataForExport);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff Meeting');
-            const fileName = `Staff_Meeting_Export_${new Date().toISOString().slice(0,10)}.xlsx`;
-            XLSX.writeFile(workbook, fileName);
-        });
-
-        importBtn.addEventListener('click', () => importFileInput.click());
-        importFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            showButtonFeedback(importBtn, 'Carico...', true, 3000);
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    if (json.length > 0) {
-                        if (confirm("L'importazione aggiungerà i nuovi record a quelli esistenti (in cima all'elenco). Continuare?")) {
-                            json.forEach(row => {
-                                const processText = (text) => (text || '').toString().replace(/\n/g, '<br>');
-                                
-                                let importTimestamp = new Date().toISOString();
-                                const dateString = row['Data Creazione'] || row['Last Update'];
-                                if (dateString) {
-                                    try {
-                                        const parts = dateString.split(', ')[0].split('/');
-                                        const timeParts = (dateString.split(', ')[1] || '00:00:00').split(':');
-                                        const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}T${timeParts[0]}:${timeParts[1]}:${timeParts[2] || '00'}`;
-                                        const parsedDate = new Date(isoDate);
-                                        if (!isNaN(parsedDate)) {
-                                            importTimestamp = parsedDate.toISOString();
-                                        }
-                                    } catch (err) { }
-                                }
-
-                                const moduleData = {
-                                    'tema': processText(row['Tema']),
-                                    'desc-estesa': processText(row['Descrizione estesa']),
-                                    'desc-sintetica': processText(row['Descrizione sintetica']),
-                                    'prossimi-passi': processText(row['Prossimi passi']),
-                                    'strutture': processText(row['Strutture']),
-                                    'flagged': (row['Flagged'] || '').toString().toLowerCase() === 'sì',
-                                    'timestamp': importTimestamp 
-                                };
-                                createModule(moduleData, true); 
-                            });
-
-                            // --- MODIFICA: Azioni post-importazione ---
-                            // 1. Riordina tutto per data più recente
-                            reorderModules(sortByNewest);
-                            
-                            // 2. Imposta il filtro su "Solo non flaggati"
-                            filterFlagged.value = 'not-flagged';
-                            
-                            // 3. Applica i filtri
-                            applyFilters();
-                            
-                            // 4. MODIFICA RICHIESTA: Imposta la vista "tutto chiuso"
-                            modulesContainer.classList.add('titles-only-view');
-                            toggleViewBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i> Vista Dettagliata';
-                            // Assicura che tutti i moduli (appena creati) siano collassati
-                            modulesContainer.querySelectorAll('.module').forEach(module => module.classList.add('collapsed'));
-                            // --- FINE MODIFICA ---
-                        }
-                    } else { alert("Il file Excel sembra essere vuoto o non valido."); }
-                } catch (error) {
-                    console.error("Errore importazione:", error);
-                    alert("Errore durante la lettura del file. Assicurati che sia un file Excel valido.");
-                } finally {
-                    importFileInput.value = '';
-                }
+                return ''; 
             };
-            reader.readAsArrayBuffer(file);
-        });
-        
-        resetBtn.addEventListener('click', () => {
-            if (confirm("Sei sicuro di voler resettare tutti i dati? L'operazione non è reversibile.")) {
-                localStorage.removeItem('staffMeetingDataV2');
-                modulesContainer.innerHTML = '';
-                showButtonFeedback(resetBtn, 'Resettato <i class="fas fa-check"></i>');
-            }
-        });
 
-        addModuleBtn.addEventListener('click', () => createModule({}, true));
+            // Funzione per ottenere data corrente in stringa locale
+            const getNowString = () => {
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            };
 
+            // INIT
+            container.classList.add('titles-view');
+            document.getElementById('toggle-view-btn').innerHTML = '<i class="fas fa-expand"></i> Vista Dettagli';
+            new Sortable(container, { animation: 150, handle: '.drag-handle', onEnd: () => triggerAutoSave() });
 
-        // --- LOGICA DI RIORDINAMENTO ---
-
-        const reorderModules = (sortFunction) => {
-            const modules = Array.from(modulesContainer.querySelectorAll('.module'));
-            modules.sort(sortFunction);
-            modules.forEach(module => modulesContainer.appendChild(module));
-        };
-
-        const sortByNewest = (a, b) => {
-            const dateA = new Date(a.dataset.timestamp || 0);
-            const dateB = new Date(b.dataset.timestamp || 0);
-            return dateB - dateA; 
-        };
-
-        const sortByOldest = (a, b) => {
-            const dateA = new Date(a.dataset.timestamp || 0);
-            const dateB = new Date(b.dataset.timestamp || 0);
-            return dateA - dateB; 
-        };
-
-        const sortByAlphabetical = (a, b) => {
-            const titleA = a.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
-            const titleB = b.querySelector('.module-title')?.innerText.trim().toLowerCase() || '';
-            return titleA.localeCompare(titleB);
-        };
-
-        sortNewestBtn.addEventListener('click', () => reorderModules(sortByNewest));
-        sortOldestBtn.addEventListener('click', () => reorderModules(sortByOldest));
-        sortAlphaBtn.addEventListener('click', () => reorderModules(sortByAlphabetical));
-
-
-        // --- LOGICA FILTRI E VISTA ---
-        
-        const applyFilters = () => {
-            const modules = modulesContainer.querySelectorAll('.module');
-            const flagValue = filterFlagged.value;
-            const dateFrom = filterDateFrom.value ? new Date(filterDateFrom.value).setHours(0,0,0,0) : null;
-            const dateTo = filterDateTo.value ? new Date(filterDateTo.value).setHours(23,59,59,999) : null;
-            const searchText = filterText.value.trim().toLowerCase();
-            
-            modules.forEach(module => {
-                let isVisible = true;
-
-                if (flagValue !== 'all') {
-                    const isFlagged = module.dataset.flagged === 'true';
-                    if ((flagValue === 'flagged' && !isFlagged) || (flagValue === 'not-flagged' && isFlagged)) {
-                        isVisible = false;
-                    }
-                }
-                
-                if(isVisible && (dateFrom || dateTo)) {
-                    const moduleDate = new Date(module.dataset.timestamp).getTime();
-                    if((dateFrom && moduleDate < dateFrom) || (dateTo && moduleDate > dateTo)) {
-                       isVisible = false;
-                    }
-                }
-                
-                if (isVisible && searchText) {
-                    const moduleText = Array.from(module.querySelectorAll('.editable-cell')).map(c => c.innerText).join(' ').toLowerCase();
-                    const hasOR = searchText.includes(' or ');
-                    const hasNOT = searchText.includes(' not ');
-
-                    if (hasOR) {
-                        const terms = searchText.split(' or ').map(t => t.trim()).filter(t => t.length > 0);
-                        isVisible = terms.some(term => moduleText.includes(term));
-                    } else {
-                        const terms = searchText.split(' ').map(t => t.trim()).filter(t => t.length > 0);
-                        let mustContain = [];
-                        let mustNotContain = [];
-
-                        terms.forEach(term => {
-                            if (term.startsWith('not:')) {
-                                mustNotContain.push(term.substring(4));
-                            } else if (term.startsWith('not ')) { 
-                                mustNotContain.push(term.substring(4));
-                            } else if (term !== 'and') { 
-                                mustContain.push(term);
-                            }
-                        });
-                        
-                        if (mustNotContain.length === 0 && hasNOT) {
-                             const parts = searchText.split(' not ');
-                             mustContain = parts[0].trim().split(' and ').map(t => t.trim());
-                             mustNotContain = parts.slice(1).map(t => t.trim());
-                        } else if (mustNotContain.length === 0 && !hasNOT) {
-                             mustContain = searchText.split(' and ').map(t => t.trim());
-                        }
-
-                        const matchesAll = mustContain.length === 0 || mustContain.every(term => moduleText.includes(term));
-                        const matchesNone = mustNotContain.length === 0 || !mustNotContain.some(term => term.length > 0 && moduleText.includes(term));
-                        
-                        isVisible = matchesAll && matchesNone;
-                    }
-                }
-
-                module.classList.toggle('hidden', !isVisible);
+            // BUTTONS
+            document.getElementById('add-btn').addEventListener('click', () => { createModule({}, true); triggerAutoSave(); });
+            document.getElementById('toggle-filters-btn').addEventListener('click', () => document.getElementById('filters-panel').classList.toggle('active'));
+            document.getElementById('toggle-view-btn').addEventListener('click', (e) => {
+                const isTitles = container.classList.toggle('titles-view');
+                e.currentTarget.innerHTML = isTitles ? '<i class="fas fa-expand"></i> Vista Dettagli' : '<i class="fas fa-list"></i> Vista Titoli';
+                document.querySelectorAll('.module').forEach(m => isTitles ? m.classList.add('collapsed') : m.classList.remove('collapsed'));
             });
-        };
-        
-        toggleViewBtn.addEventListener('click', () => {
-            modulesContainer.classList.toggle('titles-only-view');
-            const isTitlesView = modulesContainer.classList.contains('titles-only-view');
-            toggleViewBtn.innerHTML = isTitlesView 
-                ? '<i class="fas fa-expand-arrows-alt"></i> Vista Dettagliata' 
-                : '<i class="fas fa-list"></i> Vista Titoli';
 
-            const modules = modulesContainer.querySelectorAll('.module');
-            if (isTitlesView) {
-                modules.forEach(module => module.classList.add('collapsed'));
-            } else {
-                modules.forEach(module => module.classList.remove('collapsed'));
+            document.getElementById('reset-data-btn').addEventListener('click', () => {
+                if(confirm("SVUOTARE TUTTO?")) { localStorage.removeItem('staffMeetingData_v3'); location.reload(); }
+            });
+
+            document.getElementById('remove-duplicates-btn').addEventListener('click', removeDuplicates);
+            if(searchInput) searchInput.addEventListener('input', applyFilters);
+            if(statusFilter) statusFilter.addEventListener('change', applyFilters);
+
+            // CORE: CREATE MODULE
+            function createModule(data = {}, prepend = false) {
+                const clone = template.content.cloneNode(true);
+                const el = clone.querySelector('.module');
+                el.dataset.id = data.id || ('m_' + Date.now() + Math.random().toString(36).substr(2, 9));
+                
+                ['tema', 'desc-estesa', 'desc-sintetica', 'prossimi-passi', 'strutture'].forEach(f => {
+                    const div = el.querySelector(`[data-field="${f}"]`);
+                    if(data[f]) div.innerHTML = data[f];
+                });
+
+                el.querySelector('.module-preview-text').innerText = el.querySelector('[data-field="desc-sintetica"]').innerText;
+
+                // DATE LOGIC: Usa direttamente la stringa, o crea stringa "adesso"
+                const dateInput = el.querySelector('.module-date-input');
+                if (data.timestamp) {
+                    // Se arriva da Excel (stringa strana) la pulisce, se da JSON (ISO) la tiene
+                    dateInput.value = convertExcelStringToInput(data.timestamp);
+                } else {
+                    dateInput.value = getNowString();
+                }
+
+                if (data.flagged) {
+                    el.classList.add('flagged');
+                    el.querySelector('.flag-btn').classList.add('active-flag');
+                    el.querySelector('.flag-btn i').classList.replace('far', 'fas');
+                }
+
+                if (container.classList.contains('titles-view')) el.classList.add('collapsed');
+                if (prepend) container.prepend(el); else container.appendChild(el);
+                updateCounter();
             }
-        });
 
-        applyFiltersBtn.addEventListener('click', applyFilters);
-        resetFiltersBtn.addEventListener('click', () => {
-            filterFlagged.value = 'not-flagged';
-            filterDateFrom.value = '';
-            filterDateTo.value = '';
-            filterText.value = '';
-            applyFilters();
-        });
+            // EVENTS
+            container.addEventListener('click', (e) => {
+                const module = e.target.closest('.module');
+                if (!module) return;
 
-        // --- CARICAMENTO INIZIALE ---
-        loadData();
-        applyFilters(); // Applica il filtro di default ("solo non flaggati") al caricamento
-    });
+                if (e.target.closest('.toggle-collapse') || e.target.closest('.module-title')) {
+                    if (e.target.closest('.module-title') && document.activeElement === e.target) return;
+                    if (e.target.closest('.mini-copy-btn')) return;
+                    module.classList.toggle('collapsed');
+                }
+                if (e.target.closest('.flag-btn')) {
+                    const btn = e.target.closest('.flag-btn');
+                    module.classList.toggle('flagged');
+                    btn.classList.toggle('active-flag');
+                    btn.querySelector('i').className = module.classList.contains('flagged') ? 'fas fa-flag' : 'far fa-flag';
+                    triggerAutoSave(); applyFilters(); 
+                }
+                if (e.target.closest('.delete') && confirm('Eliminare?')) { module.remove(); triggerAutoSave(); updateCounter(); }
+                if (e.target.closest('.tool-btn')) { e.preventDefault(); document.execCommand(e.target.closest('.tool-btn').dataset.cmd, false, null); }
+                if (e.target.closest('.btn-copy-ppt')) copyToClipboard(module);
+                
+                // Copy buttons
+                if (e.target.closest('.copy-title-btn')) copyText(module.querySelector('.module-title').innerText, e.target.closest('.copy-title-btn'));
+                if (e.target.closest('.copy-desc-btn')) copyText(module.querySelector('.module-preview-text').innerText, e.target.closest('.copy-desc-btn'));
+            });
+
+            function copyText(text, btn) {
+                navigator.clipboard.writeText(text);
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check" style="color:green;"></i>';
+                setTimeout(() => btn.innerHTML = original, 1000);
+            }
+
+            container.addEventListener('input', (e) => {
+                const t = e.target;
+                if (t.dataset.field === 'desc-sintetica') t.closest('.module').querySelector('.module-preview-text').innerText = t.innerText;
+                if(t.isContentEditable || t.tagName === 'INPUT') triggerAutoSave();
+            });
+
+            function triggerAutoSave() {
+                const ind = document.getElementById('save-feedback');
+                ind.classList.add('visible');
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => { saveToStorage(); ind.classList.remove('visible'); }, 1000); 
+            }
+
+            // SALVATAGGIO: Salva la stringa DATA pura (YYYY-MM-DDTHH:mm), non oggetti Date
+            function saveToStorage() {
+                const data = [];
+                container.querySelectorAll('.module').forEach(m => {
+                    data.push({
+                        id: m.dataset.id,
+                        flagged: m.classList.contains('flagged'),
+                        timestamp: m.querySelector('.module-date-input').value, // SALVA LA STRINGA ESATTA
+                        tema: m.querySelector('[data-field="tema"]').innerHTML,
+                        'desc-estesa': m.querySelector('[data-field="desc-estesa"]').innerHTML,
+                        'desc-sintetica': m.querySelector('[data-field="desc-sintetica"]').innerHTML,
+                        'prossimi-passi': m.querySelector('[data-field="prossimi-passi"]').innerHTML,
+                        'strutture': m.querySelector('[data-field="strutture"]').innerHTML
+                    });
+                });
+                localStorage.setItem('staffMeetingData_v3', JSON.stringify(data));
+                updateCounter();
+            }
+
+            function loadFromStorage() {
+                const json = localStorage.getItem('staffMeetingData_v3');
+                container.innerHTML = '';
+                if (json) {
+                    try { JSON.parse(json).forEach(item => createModule(item)); } catch(e) {}
+                }
+                updateCounter();
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.toLowerCase();
+                const status = statusFilter.value; 
+                let count = 0;
+                container.querySelectorAll('.module').forEach(m => {
+                    const text = m.innerText.toLowerCase();
+                    const flg = m.classList.contains('flagged');
+                    let vis = true;
+                    if (term && !text.includes(term)) vis = false;
+                    if (status === 'active' && flg) vis = false;
+                    if (status === 'flagged' && !flg) vis = false;
+                    m.classList.toggle('hidden', !vis);
+                    if(vis) count++;
+                });
+                counterElement.innerText = `${count} record`;
+            }
+
+            function updateCounter() { applyFilters(); }
+
+            function removeDuplicates() {
+                const mods = Array.from(container.querySelectorAll('.module'));
+                const sigs = new Set();
+                let rem = 0;
+                mods.forEach(m => {
+                    const getV = s => m.querySelector(`[data-field="${s}"]`).innerText.trim();
+                    const sig = getV('tema')+"|"+getV('desc-estesa')+"|"+getV('desc-sintetica')+"|"+getV('prossimi-passi')+"|"+m.classList.contains('flagged');
+                    if (sigs.has(sig)) { m.remove(); rem++; } else { sigs.add(sig); }
+                });
+                if(rem>0) { alert(`Rimossi ${rem} duplicati.`); triggerAutoSave(); }
+            }
+
+            window.sortModules = (order) => {
+                const mods = Array.from(container.querySelectorAll('.module'));
+                mods.sort((a, b) => {
+                    const va = a.querySelector('.module-date-input').value; // Confronto lessicografico stringhe ISO funziona sempre
+                    const vb = b.querySelector('.module-date-input').value;
+                    return order === 'newest' ? (vb > va ? 1 : -1) : (va > vb ? 1 : -1);
+                });
+                mods.forEach(m => container.appendChild(m));
+            };
+
+            async function copyToClipboard(module) {
+                // Logica PPT identica
+                const clean = h => h.replace(/<[^>]+>/g, '').trim();
+                const tema = module.querySelector('[data-field="tema"]').innerHTML;
+                const desc = clean(module.querySelector('[data-field="desc-estesa"]').innerHTML);
+                const passi = clean(module.querySelector('[data-field="prossimi-passi"]').innerHTML);
+                const strutt = clean(module.querySelector('[data-field="strutture"]').innerHTML);
+                const html = `<table border="1"><tr><td><b>${tema}</b></td><td>${desc}</td><td>${passi}</td><td>${strutt}</td></tr></table>`;
+                
+                try {
+                    const blobH = new Blob([html], {type:'text/html'});
+                    const blobT = new Blob([module.innerText], {type:'text/plain'});
+                    await navigator.clipboard.write([new ClipboardItem({'text/html':blobH,'text/plain':blobT})]);
+                    const btn = module.querySelector('.btn-copy-ppt');
+                    const old = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = old, 1500);
+                } catch(e) { alert("Errore copia: " + e); }
+            }
+
+            // EXPORT / IMPORT
+            document.getElementById('export-json-btn').addEventListener('click', () => {
+                const json = localStorage.getItem('staffMeetingData_v3');
+                if(!json) return;
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([json], {type:"application/json"}));
+                a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+            });
+
+            document.getElementById('export-excel-btn').addEventListener('click', () => {
+                const rows = [];
+                container.querySelectorAll('.module').forEach(m => {
+                    if (m.classList.contains('hidden')) return;
+                    rows.push({
+                        'Data': m.querySelector('.module-date-input').value.replace('T', ' '),
+                        'Stato': m.classList.contains('flagged') ? 'Chiuso' : 'Aperto',
+                        'Tema': m.querySelector('[data-field="tema"]').innerText,
+                        'Descrizione estesa': m.querySelector('[data-field="desc-estesa"]').innerText,
+                        'Descrizione sintetica': m.querySelector('[data-field="desc-sintetica"]').innerText,
+                        'Prossimi passi': m.querySelector('[data-field="prossimi-passi"]').innerText,
+                        'Strutture': m.querySelector('[data-field="strutture"]').innerText
+                    });
+                });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Meeting");
+                XLSX.writeFile(wb, "Staff_Meeting.xlsx");
+            });
+
+            document.getElementById('import-btn').addEventListener('click', () => {
+                if(confirm("OK = Importa EXCEL\nANNULLA = Importa BACKUP JSON")) document.getElementById('file-input-excel').click();
+                else document.getElementById('file-input-json').click();
+            });
+
+            // JSON IMPORT: Usa le stringhe così come sono (fidelity assoluta)
+            document.getElementById('file-input-json').addEventListener('change', (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if(confirm(`Trovati ${data.length} record. Aggiungere?`)) {
+                            [...data].reverse().forEach(item => createModule(item, true)); 
+                            triggerAutoSave();
+                        }
+                    } catch(err) { alert("JSON non valido"); }
+                };
+                reader.readAsText(e.target.files[0]);
+                e.target.value='';
+            });
+
+            // EXCEL IMPORT: Parsa la stringa senza conversioni di Timezone
+            document.getElementById('file-input-excel').addEventListener('change', (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    // raw: false lascia che sheetjs ci dia stringhe formattate se possibile
+                    const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array', cellDates: false}); 
+                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {raw: false});
+                    
+                    if(json.length > 0 && confirm(`Importare ${json.length} record Excel?`)) {
+                        json.forEach(row => {
+                            // Cerca colonne comuni
+                            let rawDate = row['Data'] || row['Date'] || row['Timestamp'] || row['Data Creazione'];
+                            createModule({
+                                tema: row['Tema'] || row['Oggetto'], 
+                                'desc-estesa': row['Descrizione estesa'] || row['Descrizione'],
+                                'desc-sintetica': row['Descrizione sintetica'], 
+                                'prossimi-passi': row['Prossimi passi'],
+                                strutture: row['Strutture'], 
+                                flagged: (row['Flagged']||row['Stato']||'').toLowerCase().includes('chiuso') || (row['Flagged']||'').toLowerCase().includes('sì'),
+                                timestamp: rawDate // Passiamo la stringa grezza al parser "letterale"
+                            }, true);
+                        });
+                        triggerAutoSave();
+                    }
+                };
+                reader.readAsArrayBuffer(e.target.files[0]);
+                e.target.value='';
+            });
+
+            const dropZone = document.getElementById('drop-zone');
+            window.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+            window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) dropZone.classList.remove('active'); });
+            window.addEventListener('drop', (e) => {
+                e.preventDefault(); dropZone.classList.remove('active');
+                if (e.dataTransfer.files[0].name.endsWith('.json')) document.getElementById('file-input-json').dispatchEvent(new Event('change', {bubbles:true}));
+            });
+
+            loadFromStorage();
+        });
     </script>
 </body>
 </html>
