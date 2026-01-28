@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Staff Meeting - v13.3 (Duplica)</title>
+    
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* --- CSS BASE (Invariato) --- */
+        :root { --brand-blue: #00338D; --brand-yellow: #FFD200; --light-gray: #f4f6f9; --border-color: #ced4da; --text-color: #212529; --white: #ffffff; --success: #28a745; --danger: #dc3545; --radius: 6px; --shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; padding: 0; font-family: 'Titillium Web', sans-serif; background: var(--light-gray); color: var(--text-color); padding-bottom: 50px; }
+        .app-container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--light-gray); padding-bottom: 15px; padding-top: 10px; box-shadow: 0 4px 6px -6px rgba(0,0,0,0.4); margin-bottom: 20px; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; background: var(--brand-blue); color: var(--white); padding: 15px 25px; border-radius: var(--radius); border-bottom: 4px solid var(--brand-yellow); }
+        .header-title h1 { margin: 0; font-size: 1.8rem; text-transform: uppercase; }
+        .save-indicator { opacity: 0; transition: opacity 0.3s; font-weight: bold; color: var(--brand-yellow); }
+        .save-indicator.visible { opacity: 1; }
+        .main-controls { display: flex; gap: 10px; flex-wrap: wrap; background: var(--white); padding: 15px; border-radius: var(--radius); margin-top: 15px; border: 1px solid var(--border-color); align-items: center; }
+        .separator { width: 1px; background: var(--border-color); height: 30px; margin: 0 5px; }
+        .filter-stats { font-size: 0.9rem; color: #666; margin-left: auto; font-weight: 600; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn:hover { filter: brightness(95%); transform: translateY(-1px); }
+        .btn-primary { background: var(--brand-blue); color: var(--white); }
+        .btn-accent { background: var(--brand-yellow); color: var(--brand-blue); }
+        .btn-success { background: var(--success); color: var(--white); }
+        .btn-danger { background: var(--danger); color: var(--white); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
+        .filters-panel { display: none; background: #e9ecef; padding: 15px; border-radius: var(--radius); margin-top: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .filters-panel.active { display: grid; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; }
+        .module { background: var(--white); border: 1px solid var(--border-color); border-left: 5px solid var(--brand-blue); border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow); transition: all 0.3s ease; }
+        .module.flagged { border-left-color: var(--brand-yellow); background-color: #fffdf5; }
+        .module.hidden { display: none; }
+        .module-header { padding: 15px; display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+        .module-main-info { flex-grow: 1; display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+        .header-top-row { display: flex; align-items: flex-start; gap: 15px; flex-wrap: wrap; justify-content: space-between; }
+        .title-wrapper { display: flex; align-items: center; gap: 8px; flex-grow: 1; }
+        .module-title { font-size: 1.4rem; font-weight: 700; color: var(--brand-blue); border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; }
+        .module-title:focus { border-color: var(--brand-yellow); background: #fff; }
+        .module-date-input { font-family: inherit; font-size: 0.9rem; color: #666; border: 1px solid transparent; background: transparent; cursor: pointer; padding: 4px; width: 210px; margin-top: 2px; }
+        .module-date-input:hover { border-color: #ccc; background: #fff; }
+        .preview-row { display: none; align-items: center; gap: 8px; margin-top: 5px; }
+        .module.collapsed .preview-row { display: flex; }
+        .module-preview-text { font-size: 0.95rem; color: #666; font-style: italic; padding-left: 5px; }
+        .mini-copy-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; padding: 4px; transition: color 0.2s; display: flex; align-items: center; }
+        .mini-copy-btn:hover { color: var(--brand-blue); }
+        .module-actions { display: flex; gap: 5px; }
+        .icon-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f0f0f0; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .icon-btn:hover { background: #e0e0e0; color: #000; }
+        .icon-btn.drag-handle { cursor: grab; }
+        .icon-btn.active-flag { background: var(--brand-yellow); color: var(--brand-blue); }
+        .icon-btn.delete { color: var(--danger); background: #fff5f5; }
+        .icon-btn.delete:hover { background: var(--danger); color: white; }
+        .module-body { padding: 15px; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .module-body { grid-template-columns: 1fr; } }
+        .field-box { background: #fff; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-direction: column; height: 100%; }
+        .field-header { background: #f8f9fa; padding: 8px 10px; font-weight: 600; font-size: 0.9rem; color: var(--brand-blue); border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .editor-toolbar { display: flex; gap: 8px; }
+        .tool-btn { cursor: pointer; color: #999; font-size: 0.8rem; }
+        .tool-btn:hover { color: var(--brand-blue); }
+        .editable-area { padding: 12px; min-height: 120px; overflow-y: auto; flex-grow: 1; font-family: Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+        .editable-area ul { padding-left: 20px; margin: 5px 0; }
+        .editable-area:focus { background-color: #fdfeff; box-shadow: inset 0 0 0 2px var(--brand-blue); }
+        .module.collapsed .module-body { display: none; }
+        .module.collapsed .module-header { border-bottom: none; }
+        .module.collapsed .toggle-collapse i { transform: rotate(180deg); }
+        #drop-zone { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 51, 141, 0.9); z-index: 2000; color: white; justify-content: center; align-items: center; font-size: 2rem; flex-direction: column; }
+        #drop-zone.active { display: flex; }
+    </style>
+</head>
+<body>
+
+    <div id="drop-zone">
+        <i class="fas fa-file-import fa-3x" style="margin-bottom: 20px;"></i>
+        <div>Rilascia qui il file (Excel o JSON)</div>
+    </div>
+
+    <div class="app-container">
+        <div class="sticky-header">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 style="display: flex; align-items: center;">
+                        <i class="fas fa-briefcase" style="margin-right: 10px;"></i> Staff Meeting Tool 
+                        <span style="font-size: 0.4em; text-transform: none; margin-left: 15px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-weight: 600; vertical-align: middle;">v13.4</span>
+                    </h1>
+                </div>
+                <div class="header-status">
+                    <span id="save-feedback" class="save-indicator"><i class="fas fa-sync fa-spin"></i> Salvataggio...</span>
+                </div>
+            </header>
+            <div class="main-controls">
+                <button id="add-btn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Nuovo</button>
+                <div class="separator"></div>
+                
+                <button id="toggle-filters-btn" class="btn btn-outline" title="Filtri"><i class="fas fa-filter"></i></button>
+                <button id="toggle-view-btn" class="btn btn-outline"><i class="fas fa-expand"></i> Vista</button>
+                
+                <div class="separator"></div>
+
+                <div style="display:flex; flex-direction:column; align-items:center; margin:0 5px;">
+                    <span style="font-size:0.6rem; font-weight:800; color:#888; text-transform:uppercase; margin-bottom:2px;">Export</span>
+                    <div style="display:flex; gap:5px;">
+                        <button id="export-excel-btn" class="btn btn-success" style="padding:6px 12px; font-size:0.85rem;"><i class="fas fa-file-excel"></i> XLS</button>
+                        <button id="export-json-btn" class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem;"><i class="fas fa-file-code"></i> JSON</button>
+                    </div>
+                </div>
+
+                <div class="separator"></div>
+
+                <div style="display:flex; flex-direction:column; align-items:center; margin:0 5px;">
+                    <span style="font-size:0.6rem; font-weight:800; color:#888; text-transform:uppercase; margin-bottom:2px;">Import</span>
+                    <div style="display:flex; gap:5px;">
+                        <button id="import-excel-btn" class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem;"><i class="fas fa-file-excel"></i> XLS</button>
+                        <button id="import-json-btn" class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem;"><i class="fas fa-file-code"></i> JSON</button>
+                    </div>
+                </div>
+
+                <div class="separator"></div>
+                <button id="reset-data-btn" class="btn btn-danger" title="Reset App"><i class="fas fa-trash"></i></button>
+                
+                <input type="file" id="file-input-excel" accept=".xlsx, .xls, .csv" style="display:none">
+                <input type="file" id="file-input-json" accept=".json" style="display:none">
+                <div id="modules-counter" class="filter-stats">0 record</div>
+            </div>
+
+            <div id="filters-panel" class="filters-panel">
+                <div class="form-group">
+                    <label>Ricerca Testo</label>
+                    <input type="text" id="search-input" class="form-control" placeholder="Cerca...">
+                </div>
+                <div class="form-group">
+                    <label>Stato</label>
+                    <select id="filter-status" class="form-control">
+                        <option value="all">Tutti</option>
+                        <option value="active" selected>Attivi (Non utilizzati)</option>
+                        <option value="flagged">Utilizzati (Flag)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Strumenti</label>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-outline btn-sm" onclick="sortModules('newest')" title="Ordina per data">Date <i class="fas fa-arrow-down"></i></button>
+                        <button id="remove-duplicates-btn" class="btn btn-outline btn-sm" title="Rimuove record identici" style="color: #dc3545; border-color: #dc3545;"><i class="fas fa-clone"></i> No Duplicati</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="modules-container"></div>
+    </div>
+
+    <template id="module-template">
+        <div class="module">
+            <div class="module-header">
+                <div class="module-main-info">
+                    <div class="header-top-row">
+                        <div class="title-wrapper">
+                            <div class="module-title" contenteditable="true" data-field="tema" placeholder="Oggetto del meeting..."></div>
+                            <button class="mini-copy-btn copy-title-btn" title="Copia Titolo"><i class="far fa-copy"></i></button>
+                        </div>
+                        <input type="datetime-local" class="module-date-input">
+                    </div>
+                    <div class="preview-row">
+                        <div class="module-preview-text"></div>
+                        <button class="mini-copy-btn copy-desc-btn" title="Copia Descrizione"><i class="far fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="module-actions">
+                    <button class="icon-btn toggle-collapse" title="Espandi/Riduci"><i class="fas fa-chevron-up"></i></button>
+                    <button class="icon-btn btn-copy-ppt" title="Copia per PPT (Arial 11, No Bullets)"><i class="fas fa-clipboard"></i></button>
+                    <button class="icon-btn clone-btn" title="Duplica"><i class="far fa-clone"></i></button>
+                    <button class="icon-btn flag-btn" title="Flag"><i class="far fa-flag"></i></button>
+                    <button class="icon-btn drag-handle" title="Sposta"><i class="fas fa-grip-vertical"></i></button>
+                    <button class="icon-btn delete" title="Elimina"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="module-body">
+                <div style="display:flex; flex-direction:column; gap:15px;">
+                    <div class="field-box" style="flex:2">
+                        <div class="field-header">Descrizione Estesa
+                            <div class="editor-toolbar">
+                                <i class="fas fa-bold tool-btn" data-cmd="bold"></i>
+                                <i class="fas fa-list-ul tool-btn" data-cmd="insertUnorderedList"></i>
+                                <i class="fas fa-eraser tool-btn" data-cmd="removeFormat"></i>
+                            </div>
+                        </div>
+                        <div class="editable-area" contenteditable="true" data-field="desc-estesa"></div>
+                    </div>
+                    <div class="field-box" style="flex:1">
+                        <div class="field-header">Descrizione Sintetica</div>
+                        <div class="editable-area" contenteditable="true" data-field="desc-sintetica"></div>
+                    </div>
+                </div>
+                <div class="field-box">
+                    <div class="field-header">Prossimi Passi</div>
+                    <div class="editable-area" contenteditable="true" data-field="prossimi-passi"></div>
+                </div>
+                <div class="field-box">
+                    <div class="field-header">Strutture</div>
+                    <div class="editable-area" contenteditable="true" data-field="strutture"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('modules-container');
+            const template = document.getElementById('module-template');
+            const searchInput = document.getElementById('search-input');
+            const statusFilter = document.getElementById('filter-status');
+            const counterElement = document.getElementById('modules-counter');
+            let autoSaveTimeout;
+            
+            // --- PARSER DI DATE "LETTERALE" (STRING-BASED) ---
+            const convertExcelStringToInput = (str) => {
+                if (!str) return '';
+                str = String(str).trim();
+                if (str.match(/^\d{4}-\d{2}-\d{2}T/)) return str.substring(0, 16);
+                const match = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:[\s,]+(\d{1,2})[:\.](\d{1,2}))?/);
+                if (match) {
+                    const d = match[1].padStart(2, '0');
+                    const m = match[2].padStart(2, '0');
+                    let y = match[3];
+                    if (y.length === 2) y = "20" + y;
+                    const hh = (match[4] || '00').padStart(2, '0');
+                    const mm = (match[5] || '00').padStart(2, '0');
+                    return `${y}-${m}-${d}T${hh}:${mm}`;
+                }
+                if (!isNaN(str) && Number(str) > 30000) {
+                    const dateObj = new Date(Math.round((str - 25569)*86400*1000));
+                    const Y = dateObj.getFullYear();
+                    const M = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const D = String(dateObj.getDate()).padStart(2, '0');
+                    const H = String(dateObj.getHours()).padStart(2, '0');
+                    const Min = String(dateObj.getMinutes()).padStart(2, '0');
+                    return `${Y}-${M}-${D}T${H}:${Min}`;
+                }
+                return ''; 
+            };
+
+            const getNowString = () => {
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            };
+
+            // INIT
+            container.classList.add('titles-view');
+            document.getElementById('toggle-view-btn').innerHTML = '<i class="fas fa-expand"></i> Vista Dettagli';
+            new Sortable(container, { animation: 150, handle: '.drag-handle', onEnd: () => triggerAutoSave() });
+
+            // BUTTONS
+            document.getElementById('add-btn').addEventListener('click', () => { createModule({}, true); triggerAutoSave(); });
+            document.getElementById('toggle-filters-btn').addEventListener('click', () => document.getElementById('filters-panel').classList.toggle('active'));
+            document.getElementById('toggle-view-btn').addEventListener('click', (e) => {
+                const isTitles = container.classList.toggle('titles-view');
+                e.currentTarget.innerHTML = isTitles ? '<i class="fas fa-expand"></i> Vista Dettagli' : '<i class="fas fa-list"></i> Vista Titoli';
+                document.querySelectorAll('.module').forEach(m => isTitles ? m.classList.add('collapsed') : m.classList.remove('collapsed'));
+            });
+
+            document.getElementById('reset-data-btn').addEventListener('click', () => {
+                if(confirm("SVUOTARE TUTTO?")) { localStorage.removeItem('staffMeetingData_v3'); location.reload(); }
+            });
+
+            document.getElementById('remove-duplicates-btn').addEventListener('click', removeDuplicates);
+            if(searchInput) searchInput.addEventListener('input', applyFilters);
+            if(statusFilter) statusFilter.addEventListener('change', applyFilters);
+
+            // CORE: CREATE MODULE
+            function createModule(data = {}, prepend = false) {
+                const clone = template.content.cloneNode(true);
+                const el = clone.querySelector('.module');
+                el.dataset.id = data.id || ('m_' + Date.now() + Math.random().toString(36).substr(2, 9));
+                
+                ['tema', 'desc-estesa', 'desc-sintetica', 'prossimi-passi', 'strutture'].forEach(f => {
+                    const div = el.querySelector(`[data-field="${f}"]`);
+                    if(data[f]) div.innerHTML = data[f];
+                });
+
+                el.querySelector('.module-preview-text').innerText = el.querySelector('[data-field="desc-sintetica"]').innerText;
+
+                const dateInput = el.querySelector('.module-date-input');
+                if (data.timestamp) {
+                    dateInput.value = convertExcelStringToInput(data.timestamp);
+                } else {
+                    dateInput.value = getNowString();
+                }
+
+                if (data.flagged) {
+                    el.classList.add('flagged');
+                    el.querySelector('.flag-btn').classList.add('active-flag');
+                    el.querySelector('.flag-btn i').classList.replace('far', 'fas');
+                }
+
+                if (container.classList.contains('titles-view')) el.classList.add('collapsed');
+                if (prepend) container.prepend(el); else container.appendChild(el);
+                updateCounter();
+                return el; // Return element for duplication logic
+            }
+
+            // EVENTS
+            container.addEventListener('click', (e) => {
+                const module = e.target.closest('.module');
+                if (!module) return;
+
+                if (e.target.closest('.toggle-collapse') || e.target.closest('.module-title')) {
+                    if (e.target.closest('.module-title') && document.activeElement === e.target) return;
+                    if (e.target.closest('.mini-copy-btn')) return;
+                    module.classList.toggle('collapsed');
+                }
+                
+                // NUOVA LOGICA DUPLICA
+                if (e.target.closest('.clone-btn')) {
+                    const original = module;
+                    const data = {
+                        tema: original.querySelector('[data-field="tema"]').innerHTML,
+                        'desc-estesa': original.querySelector('[data-field="desc-estesa"]').innerHTML,
+                        'desc-sintetica': original.querySelector('[data-field="desc-sintetica"]').innerHTML,
+                        'prossimi-passi': original.querySelector('[data-field="prossimi-passi"]').innerHTML,
+                        'strutture': original.querySelector('[data-field="strutture"]').innerHTML,
+                        timestamp: original.querySelector('.module-date-input').value,
+                        flagged: original.classList.contains('flagged')
+                    };
+                    
+                    const newEl = createModule(data); // Crea ma appende in fondo
+                    // Sposta il nuovo elemento subito sotto l'originale
+                    if (original.nextSibling) {
+                        container.insertBefore(newEl, original.nextSibling);
+                    } else {
+                        container.appendChild(newEl);
+                    }
+                    triggerAutoSave();
+                    
+                    // Feedback visivo sul bottone
+                    const btn = e.target.closest('.clone-btn');
+                    const oldHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = oldHtml, 1000);
+                }
+
+                if (e.target.closest('.flag-btn')) {
+                    const btn = e.target.closest('.flag-btn');
+                    module.classList.toggle('flagged');
+                    btn.classList.toggle('active-flag');
+                    btn.querySelector('i').className = module.classList.contains('flagged') ? 'fas fa-flag' : 'far fa-flag';
+                    triggerAutoSave(); applyFilters(); 
+                }
+                if (e.target.closest('.delete') && confirm('Eliminare?')) { module.remove(); triggerAutoSave(); updateCounter(); }
+                if (e.target.closest('.tool-btn')) { e.preventDefault(); document.execCommand(e.target.closest('.tool-btn').dataset.cmd, false, null); }
+                if (e.target.closest('.btn-copy-ppt')) copyToClipboard(module);
+                
+                if (e.target.closest('.copy-title-btn')) copyText(module.querySelector('.module-title').innerText, e.target.closest('.copy-title-btn'));
+                if (e.target.closest('.copy-desc-btn')) copyText(module.querySelector('.module-preview-text').innerText, e.target.closest('.copy-desc-btn'));
+            });
+
+            function copyText(text, btn) {
+                navigator.clipboard.writeText(text);
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check" style="color:green;"></i>';
+                setTimeout(() => btn.innerHTML = original, 1000);
+            }
+
+            container.addEventListener('input', (e) => {
+                const t = e.target;
+                if (t.dataset.field === 'desc-sintetica') t.closest('.module').querySelector('.module-preview-text').innerText = t.innerText;
+                if(t.isContentEditable || t.tagName === 'INPUT') triggerAutoSave();
+            });
+
+            function triggerAutoSave() {
+                const ind = document.getElementById('save-feedback');
+                ind.classList.add('visible');
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => { saveToStorage(); ind.classList.remove('visible'); }, 1000); 
+            }
+
+            function saveToStorage() {
+                const data = [];
+                container.querySelectorAll('.module').forEach(m => {
+                    data.push({
+                        id: m.dataset.id,
+                        flagged: m.classList.contains('flagged'),
+                        timestamp: m.querySelector('.module-date-input').value,
+                        tema: m.querySelector('[data-field="tema"]').innerHTML,
+                        'desc-estesa': m.querySelector('[data-field="desc-estesa"]').innerHTML,
+                        'desc-sintetica': m.querySelector('[data-field="desc-sintetica"]').innerHTML,
+                        'prossimi-passi': m.querySelector('[data-field="prossimi-passi"]').innerHTML,
+                        'strutture': m.querySelector('[data-field="strutture"]').innerHTML
+                    });
+                });
+                localStorage.setItem('staffMeetingData_v3', JSON.stringify(data));
+                updateCounter();
+            }
+
+            function loadFromStorage() {
+                const json = localStorage.getItem('staffMeetingData_v3');
+                container.innerHTML = '';
+                if (json) {
+                    try { JSON.parse(json).forEach(item => createModule(item)); } catch(e) {}
+                }
+                updateCounter();
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.toLowerCase();
+                const status = statusFilter.value; 
+                let count = 0;
+                container.querySelectorAll('.module').forEach(m => {
+                    const text = m.innerText.toLowerCase();
+                    const flg = m.classList.contains('flagged');
+                    let vis = true;
+                    if (term && !text.includes(term)) vis = false;
+                    if (status === 'active' && flg) vis = false;
+                    if (status === 'flagged' && !flg) vis = false;
+                    m.classList.toggle('hidden', !vis);
+                    if(vis) count++;
+                });
+                counterElement.innerText = `${count} record`;
+            }
+
+            function updateCounter() { applyFilters(); }
+
+            function removeDuplicates() {
+                const mods = Array.from(container.querySelectorAll('.module'));
+                const sigs = new Set();
+                let rem = 0;
+                mods.forEach(m => {
+                    const getV = s => m.querySelector(`[data-field="${s}"]`).innerText.trim();
+                    const sig = getV('tema')+"|"+getV('desc-estesa')+"|"+getV('desc-sintetica')+"|"+getV('prossimi-passi')+"|"+m.classList.contains('flagged');
+                    if (sigs.has(sig)) { m.remove(); rem++; } else { sigs.add(sig); }
+                });
+                if(rem>0) { alert(`Rimossi ${rem} duplicati.`); triggerAutoSave(); }
+            }
+
+            window.sortModules = (order) => {
+                const mods = Array.from(container.querySelectorAll('.module'));
+                mods.sort((a, b) => {
+                    const va = a.querySelector('.module-date-input').value;
+                    const vb = b.querySelector('.module-date-input').value;
+                    return order === 'newest' ? (vb > va ? 1 : -1) : (va > vb ? 1 : -1);
+                });
+                mods.forEach(m => container.appendChild(m));
+            };
+
+            async function copyToClipboard(module) {
+                // Recupera il contenuto mantenendo l'HTML (per gli a capo <br> o <div>)
+                const getContent = (field) => {
+                    const el = module.querySelector(`[data-field="${field}"]`);
+                    return el ? el.innerHTML : '';
+                };
+
+                const tema = getContent('tema');
+                const desc = getContent('desc-estesa');
+                const passi = getContent('prossimi-passi');
+                const strutt = getContent('strutture');
+
+                // Stili inline specifici per interpretazione corretta in PowerPoint/Word
+                const baseStyle = "font-family: 'Arial', sans-serif; font-size: 11pt; vertical-align: top; padding: 4px;";
+                
+                // Colonna 1: Blu Scuro (#00338D), Grassetto
+                const styleTitle = `${baseStyle} font-weight: bold; color: #00338D;`;
+                
+                // Altre Colonne: Nero (#000000), Normale
+                const styleText = `${baseStyle} font-weight: normal; color: #000000;`;
+
+                // Costruzione Tabella HTML con stili inline
+                const htmlContent = `
+                    <meta charset='utf-8'>
+                    <table border="1" style="border-collapse: collapse;">
+                        <tr>
+                            <td style="${styleTitle}">${tema}</td>
+                            <td style="${styleText}">${desc}</td>
+                            <td style="${styleText}">${passi}</td>
+                            <td style="${styleText}">${strutt}</td>
+                        </tr>
+                    </table>`;
+                
+                try {
+                    const blobH = new Blob([htmlContent], {type:'text/html'});
+                    const blobT = new Blob([module.innerText], {type:'text/plain'});
+                    
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            'text/html': blobH,
+                            'text/plain': blobT
+                        })
+                    ]);
+
+                    const btn = module.querySelector('.btn-copy-ppt');
+                    const old = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = old, 1500);
+                } catch(e) { alert("Errore copia: " + e); }
+            }
+
+            document.getElementById('export-json-btn').addEventListener('click', () => {
+                const json = localStorage.getItem('staffMeetingData_v3');
+                if(!json) return;
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const ts = `${now.getFullYear()}_${pad(now.getMonth()+1)}_${pad(now.getDate())}_${pad(now.getHours())}_${pad(now.getMinutes())}`;
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([json], {type:"application/json"}));
+                a.download = `staff_meeting_${ts}.json`; a.click();
+            });
+
+            document.getElementById('export-excel-btn').addEventListener('click', () => {
+                const rows = [];
+                container.querySelectorAll('.module').forEach(m => {
+                    if (m.classList.contains('hidden')) return;
+                    rows.push({
+                        'Data': m.querySelector('.module-date-input').value.replace('T', ' '),
+                        'Stato': m.classList.contains('flagged') ? 'Chiuso' : 'Aperto',
+                        'Tema': m.querySelector('[data-field="tema"]').innerText,
+                        'Descrizione estesa': m.querySelector('[data-field="desc-estesa"]').innerText,
+                        'Descrizione sintetica': m.querySelector('[data-field="desc-sintetica"]').innerText,
+                        'Prossimi passi': m.querySelector('[data-field="prossimi-passi"]').innerText,
+                        'Strutture': m.querySelector('[data-field="strutture"]').innerText
+                    });
+                });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Meeting");
+                XLSX.writeFile(wb, "Staff_Meeting.xlsx");
+            });
+
+            // Nuovi listener separati per i tasti Import
+            document.getElementById('import-excel-btn').addEventListener('click', () => document.getElementById('file-input-excel').click());
+            document.getElementById('import-json-btn').addEventListener('click', () => document.getElementById('file-input-json').click());
+
+            document.getElementById('file-input-json').addEventListener('change', (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if(confirm(`Trovati ${data.length} record. Aggiungere?`)) {
+                            [...data].reverse().forEach(item => createModule(item, true)); 
+                            triggerAutoSave();
+                        }
+                    } catch(err) { alert("JSON non valido"); }
+                };
+                reader.readAsText(e.target.files[0]);
+                e.target.value='';
+            });
+
+            document.getElementById('file-input-excel').addEventListener('change', (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array', cellDates: false}); 
+                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {raw: false});
+                    
+                    if(json.length > 0 && confirm(`Importare ${json.length} record Excel?`)) {
+                        json.forEach(row => {
+                            let rawDate = row['Data'] || row['Date'] || row['Timestamp'] || row['Data Creazione'];
+                            createModule({
+                                tema: row['Tema'] || row['Oggetto'], 
+                                'desc-estesa': row['Descrizione estesa'] || row['Descrizione'],
+                                'desc-sintetica': row['Descrizione sintetica'], 
+                                'prossimi-passi': row['Prossimi passi'],
+                                strutture: row['Strutture'], 
+                                flagged: (row['Flagged']||row['Stato']||'').toLowerCase().includes('chiuso') || (row['Flagged']||'').toLowerCase().includes('sì'),
+                                timestamp: rawDate
+                            }, true);
+                        });
+                        triggerAutoSave();
+                    }
+                };
+                reader.readAsArrayBuffer(e.target.files[0]);
+                e.target.value='';
+            });
+
+            const dropZone = document.getElementById('drop-zone');
+            window.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+            window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) dropZone.classList.remove('active'); });
+            window.addEventListener('drop', (e) => {
+                e.preventDefault(); dropZone.classList.remove('active');
+                if (e.dataTransfer.files[0].name.endsWith('.json')) document.getElementById('file-input-json').dispatchEvent(new Event('change', {bubbles:true}));
+            });
+
+            loadFromStorage();
+        });
+    </script>
+</body>
+</html>
