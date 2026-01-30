@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool Staff Meeting - v13.3 (Duplica)</title>
+    <title>Tool Staff Meeting - v13.4 (Aggiornato)</title>
     
     <link rel="icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* --- CSS BASE (Invariato) --- */
+        /* --- CSS BASE --- */
         :root { --brand-blue: #00338D; --brand-yellow: #FFD200; --light-gray: #f4f6f9; --border-color: #ced4da; --text-color: #212529; --white: #ffffff; --success: #28a745; --danger: #dc3545; --radius: 6px; --shadow: 0 2px 8px rgba(0,0,0,0.1); }
         * { box-sizing: border-box; outline: none; }
         body { margin: 0; padding: 0; font-family: 'Titillium Web', sans-serif; background: var(--light-gray); color: var(--text-color); padding-bottom: 50px; }
@@ -222,7 +222,6 @@
             const counterElement = document.getElementById('modules-counter');
             let autoSaveTimeout;
             
-            // --- PARSER DI DATE "LETTERALE" (STRING-BASED) ---
             const convertExcelStringToInput = (str) => {
                 if (!str) return '';
                 str = String(str).trim();
@@ -255,12 +254,10 @@
                 return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
             };
 
-            // INIT
             container.classList.add('titles-view');
             document.getElementById('toggle-view-btn').innerHTML = '<i class="fas fa-expand"></i> Vista Dettagli';
             new Sortable(container, { animation: 150, handle: '.drag-handle', onEnd: () => triggerAutoSave() });
 
-            // BUTTONS
             document.getElementById('add-btn').addEventListener('click', () => { createModule({}, true); triggerAutoSave(); });
             document.getElementById('toggle-filters-btn').addEventListener('click', () => document.getElementById('filters-panel').classList.toggle('active'));
             document.getElementById('toggle-view-btn').addEventListener('click', (e) => {
@@ -277,7 +274,6 @@
             if(searchInput) searchInput.addEventListener('input', applyFilters);
             if(statusFilter) statusFilter.addEventListener('change', applyFilters);
 
-            // CORE: CREATE MODULE
             function createModule(data = {}, prepend = false) {
                 const clone = template.content.cloneNode(true);
                 const el = clone.querySelector('.module');
@@ -285,17 +281,17 @@
                 
                 ['tema', 'desc-estesa', 'desc-sintetica', 'prossimi-passi', 'strutture'].forEach(f => {
                     const div = el.querySelector(`[data-field="${f}"]`);
-                    if(data[f]) div.innerHTML = data[f];
+                    if(data[f]) {
+                        div.innerHTML = data[f];
+                    } else if (f === 'tema') {
+                        div.innerText = "Nuovo Meeting (Clicca per modificare)";
+                    }
                 });
 
                 el.querySelector('.module-preview-text').innerText = el.querySelector('[data-field="desc-sintetica"]').innerText;
 
                 const dateInput = el.querySelector('.module-date-input');
-                if (data.timestamp) {
-                    dateInput.value = convertExcelStringToInput(data.timestamp);
-                } else {
-                    dateInput.value = getNowString();
-                }
+                dateInput.value = data.timestamp ? convertExcelStringToInput(data.timestamp) : getNowString();
 
                 if (data.flagged) {
                     el.classList.add('flagged');
@@ -306,10 +302,9 @@
                 if (container.classList.contains('titles-view')) el.classList.add('collapsed');
                 if (prepend) container.prepend(el); else container.appendChild(el);
                 updateCounter();
-                return el; // Return element for duplication logic
+                return el;
             }
 
-            // EVENTS
             container.addEventListener('click', (e) => {
                 const module = e.target.closest('.module');
                 if (!module) return;
@@ -320,7 +315,6 @@
                     module.classList.toggle('collapsed');
                 }
                 
-                // NUOVA LOGICA DUPLICA
                 if (e.target.closest('.clone-btn')) {
                     const original = module;
                     const data = {
@@ -333,25 +327,15 @@
                         flagged: original.classList.contains('flagged')
                     };
                     
-                    const newEl = createModule(data); // Crea ma appende in fondo
-                    // Sposta il nuovo elemento subito sotto l'originale
-                    if (original.nextSibling) {
-                        container.insertBefore(newEl, original.nextSibling);
-                    } else {
-                        container.appendChild(newEl);
-                    }
+                    const newEl = createModule(data);
+                    if (original.nextSibling) container.insertBefore(newEl, original.nextSibling);
+                    else container.appendChild(newEl);
                     triggerAutoSave();
-                    
-                    // Feedback visivo sul bottone
-                    const btn = e.target.closest('.clone-btn');
-                    const oldHtml = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => btn.innerHTML = oldHtml, 1000);
                 }
 
                 if (e.target.closest('.flag-btn')) {
-                    const btn = e.target.closest('.flag-btn');
                     module.classList.toggle('flagged');
+                    const btn = e.target.closest('.flag-btn');
                     btn.classList.toggle('active-flag');
                     btn.querySelector('i').className = module.classList.contains('flagged') ? 'fas fa-flag' : 'far fa-flag';
                     triggerAutoSave(); applyFilters(); 
@@ -359,7 +343,6 @@
                 if (e.target.closest('.delete') && confirm('Eliminare?')) { module.remove(); triggerAutoSave(); updateCounter(); }
                 if (e.target.closest('.tool-btn')) { e.preventDefault(); document.execCommand(e.target.closest('.tool-btn').dataset.cmd, false, null); }
                 if (e.target.closest('.btn-copy-ppt')) copyToClipboard(module);
-                
                 if (e.target.closest('.copy-title-btn')) copyText(module.querySelector('.module-title').innerText, e.target.closest('.copy-title-btn'));
                 if (e.target.closest('.copy-desc-btn')) copyText(module.querySelector('.module-preview-text').innerText, e.target.closest('.copy-desc-btn'));
             });
@@ -370,6 +353,14 @@
                 btn.innerHTML = '<i class="fas fa-check" style="color:green;"></i>';
                 setTimeout(() => btn.innerHTML = original, 1000);
             }
+
+            container.addEventListener('paste', (e) => {
+                if (e.target.isContentEditable) {
+                    e.preventDefault();
+                    const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+                    window.document.execCommand('insertText', false, text);
+                }
+            });
 
             container.addEventListener('input', (e) => {
                 const t = e.target;
@@ -405,9 +396,7 @@
             function loadFromStorage() {
                 const json = localStorage.getItem('staffMeetingData_v3');
                 container.innerHTML = '';
-                if (json) {
-                    try { JSON.parse(json).forEach(item => createModule(item)); } catch(e) {}
-                }
+                if (json) { try { JSON.parse(json).forEach(item => createModule(item)); } catch(e) {} }
                 updateCounter();
             }
 
@@ -453,65 +442,41 @@
             };
 
             async function copyToClipboard(module) {
-                // Recupera il contenuto mantenendo l'HTML (per gli a capo <br> o <div>)
-                const getContent = (field) => {
-                    const el = module.querySelector(`[data-field="${field}"]`);
-                    return el ? el.innerHTML : '';
-                };
-
-                const tema = getContent('tema');
-                const desc = getContent('desc-estesa');
-                const passi = getContent('prossimi-passi');
-                const strutt = getContent('strutture');
-
-                // Stili inline specifici per interpretazione corretta in PowerPoint/Word
+                const getContent = (field) => module.querySelector(`[data-field="${field}"]`)?.innerHTML || '';
                 const baseStyle = "font-family: 'Arial', sans-serif; font-size: 11pt; vertical-align: top; padding: 4px;";
-                
-                // Colonna 1: Blu Scuro (#00338D), Grassetto
                 const styleTitle = `${baseStyle} font-weight: bold; color: #00338D;`;
-                
-                // Altre Colonne: Nero (#000000), Normale
                 const styleText = `${baseStyle} font-weight: normal; color: #000000;`;
 
-                // Costruzione Tabella HTML con stili inline
                 const htmlContent = `
                     <meta charset='utf-8'>
                     <table border="1" style="border-collapse: collapse;">
                         <tr>
-                            <td style="${styleTitle}">${tema}</td>
-                            <td style="${styleText}">${desc}</td>
-                            <td style="${styleText}">${passi}</td>
-                            <td style="${styleText}">${strutt}</td>
+                            <td style="${styleTitle}">${getContent('tema')}</td>
+                            <td style="${styleText}">${getContent('desc-estesa')}</td>
+                            <td style="${styleText}">${getContent('prossimi-passi')}</td>
+                            <td style="${styleText}">${getContent('strutture')}</td>
                         </tr>
                     </table>`;
                 
                 try {
-                    const blobH = new Blob([htmlContent], {type:'text/html'});
-                    const blobT = new Blob([module.innerText], {type:'text/plain'});
-                    
                     await navigator.clipboard.write([
                         new ClipboardItem({
-                            'text/html': blobH,
-                            'text/plain': blobT
+                            'text/html': new Blob([htmlContent], {type:'text/html'}),
+                            'text/plain': new Blob([module.innerText], {type:'text/plain'})
                         })
                     ]);
-
                     const btn = module.querySelector('.btn-copy-ppt');
-                    const old = btn.innerHTML;
                     btn.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => btn.innerHTML = old, 1500);
+                    setTimeout(() => btn.innerHTML = '<i class="fas fa-clipboard"></i>', 1500);
                 } catch(e) { alert("Errore copia: " + e); }
             }
 
             document.getElementById('export-json-btn').addEventListener('click', () => {
                 const json = localStorage.getItem('staffMeetingData_v3');
                 if(!json) return;
-                const now = new Date();
-                const pad = n => String(n).padStart(2, '0');
-                const ts = `${now.getFullYear()}_${pad(now.getMonth()+1)}_${pad(now.getDate())}_${pad(now.getHours())}_${pad(now.getMinutes())}`;
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([json], {type:"application/json"}));
-                a.download = `staff_meeting_${ts}.json`; a.click();
+                a.download = `staff_meeting_export.json`; a.click();
             });
 
             document.getElementById('export-excel-btn').addEventListener('click', () => {
@@ -533,7 +498,6 @@
                 XLSX.writeFile(wb, "Staff_Meeting.xlsx");
             });
 
-            // Nuovi listener separati per i tasti Import
             document.getElementById('import-excel-btn').addEventListener('click', () => document.getElementById('file-input-excel').click());
             document.getElementById('import-json-btn').addEventListener('click', () => document.getElementById('file-input-json').click());
 
@@ -542,10 +506,8 @@
                 reader.onload = (ev) => {
                     try {
                         const data = JSON.parse(ev.target.result);
-                        if(confirm(`Trovati ${data.length} record. Aggiungere?`)) {
-                            [...data].reverse().forEach(item => createModule(item, true)); 
-                            triggerAutoSave();
-                        }
+                        [...data].reverse().forEach(item => createModule(item, true)); 
+                        triggerAutoSave();
                     } catch(err) { alert("JSON non valido"); }
                 };
                 reader.readAsText(e.target.files[0]);
@@ -555,20 +517,18 @@
             document.getElementById('file-input-excel').addEventListener('change', (e) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array', cellDates: false}); 
+                    const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array'}); 
                     const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {raw: false});
-                    
-                    if(json.length > 0 && confirm(`Importare ${json.length} record Excel?`)) {
+                    if(json.length > 0) {
                         json.forEach(row => {
-                            let rawDate = row['Data'] || row['Date'] || row['Timestamp'] || row['Data Creazione'];
                             createModule({
                                 tema: row['Tema'] || row['Oggetto'], 
-                                'desc-estesa': row['Descrizione estesa'] || row['Descrizione'],
+                                'desc-estesa': row['Descrizione estesa'],
                                 'desc-sintetica': row['Descrizione sintetica'], 
                                 'prossimi-passi': row['Prossimi passi'],
                                 strutture: row['Strutture'], 
-                                flagged: (row['Flagged']||row['Stato']||'').toLowerCase().includes('chiuso') || (row['Flagged']||'').toLowerCase().includes('sì'),
-                                timestamp: rawDate
+                                flagged: (row['Stato']||'').toLowerCase().includes('chiuso'),
+                                timestamp: row['Data']
                             }, true);
                         });
                         triggerAutoSave();
@@ -583,7 +543,9 @@
             window.addEventListener('dragleave', (e) => { if (!e.relatedTarget) dropZone.classList.remove('active'); });
             window.addEventListener('drop', (e) => {
                 e.preventDefault(); dropZone.classList.remove('active');
-                if (e.dataTransfer.files[0].name.endsWith('.json')) document.getElementById('file-input-json').dispatchEvent(new Event('change', {bubbles:true}));
+                if (e.dataTransfer.files[0].name.endsWith('.json')) {
+                   // Logic for dropped files can be added here
+                }
             });
 
             loadFromStorage();
